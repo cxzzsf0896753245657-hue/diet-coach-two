@@ -1,0 +1,15 @@
+{
+  "appId": "com.dietcoach.app",
+  "appName": "減重教練",
+  "webDir": "www",
+  "plugins": {
+    "BackgroundRunner": {
+      "label": "com.example.dietcoach.background",
+      "src": "runners/background.js",
+      "event": "checkSummaries",
+      "repeat": true,
+      "interval": 15,
+      "autoStart": true
+    }
+  }
+}
