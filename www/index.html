@@ -3,8 +3,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>減重教練</title>
 <style>
-:root{--bg:#f4f6f3;--card:#fff;--ink:#14241c;--mut:#6a7a71;--ac:#1f8a5f;--acd:#146b49;--warn:#e07b2c;--ln:#e5eae6;--tint:#e9f2ec;--sh:0 1px 2px rgba(20,36,28,.05),0 8px 24px rgba(20,36,28,.06)}
-@media(prefers-color-scheme:dark){:root{--bg:#0d1411;--card:#17201b;--ink:#e9f2ed;--mut:#92a398;--ac:#47c08c;--acd:#7fe0b5;--warn:#f0974a;--ln:#26332c;--tint:#1f2d26;--sh:0 1px 2px rgba(0,0,0,.4)}}
+:root{--bg:#f7f4f1;--card:#fff;--ink:#2b2420;--mut:#8c8076;--ac:#c1562f;--acd:#9c4323;--warn:#c99a2e;--ln:#ece6df;--tint:#f4e4d9;--sh:0 1px 2px rgba(43,36,32,.05),0 8px 24px rgba(43,36,32,.06)}
+@media(prefers-color-scheme:dark){:root{--bg:#1b1714;--card:#262019;--ink:#f3ece4;--mut:#ab9e90;--ac:#e08858;--acd:#f0ab80;--warn:#dcb354;--ln:#3a2f26;--tint:#3a2a20;--sh:0 1px 2px rgba(0,0,0,.4)}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;padding:env(safe-area-inset-top) 0 0;font-variant-numeric:tabular-nums}
@@ -43,30 +43,34 @@ svg{touch-action:manipulation}.lg{display:inline-block;width:10px;height:10px;bo
 .wr{display:grid;grid-template-columns:96px 1fr 48px 58px;gap:8px;align-items:center;font-size:14px;padding:8px 0;border-bottom:1px solid var(--ln)}.wb{height:8px;background:var(--tint);border-radius:4px;overflow:hidden}.wb i{display:block;height:100%;background:var(--ac);border-radius:4px}.wr .dn{color:var(--ac)}.wr .up{color:var(--warn)}.wr span:last-child{text-align:right}
 .dp{margin-top:6px}.dp .dl{font-size:16px}.tg{min-height:0;padding:2px 10px;font-size:13px;margin:0 6px 0 0;background:transparent;color:var(--mut);border:1px solid var(--ln);border-radius:999px}.tg.on{background:color-mix(in srgb,var(--warn) 22%,var(--card));color:var(--ink);border-color:var(--warn)}
 .pills.fit4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;overflow:visible}.pills.fit4 .pill{padding:6px 2px;min-width:0;font-size:13px;min-height:40px}
+.relm{padding:12px 0;border-top:1px solid var(--ln)}.relm:first-of-type{border-top:0;padding-top:0}
+.relm>label{margin-bottom:8px}.relm>.tm{margin-top:0}
+.swrow{display:flex;gap:10px;align-items:flex-start;margin:10px 0 0}.swrow:first-child{margin-top:0}.swrow input{margin-top:3px}
+
 .fic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:17px;flex:none}
 .mchip{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;margin-right:4px;white-space:nowrap}
-.chipr{display:block;margin-top:3px}
+.chipr{display:block;margin-top:4px;line-height:1.9}
 .mchip.p{background:color-mix(in srgb,var(--ac) 16%,var(--card));color:var(--acd)}
 .mchip.c{background:color-mix(in srgb,#e0a92c 22%,var(--card));color:#8a6a12}
 .mchip.f{background:color-mix(in srgb,#b0479a 18%,var(--card));color:#8a3a78}
 @media(prefers-color-scheme:dark){.mchip.c{color:#e0a92c}.mchip.f{color:#e088cf}}
 .qstep{display:flex;align-items:center;gap:0;flex:none}.qstep button{width:30px;height:30px;min-height:30px;padding:0;border-radius:9px;font-size:16px;line-height:1}.qstep input{width:50px;text-align:center;margin:0 4px;padding:4px 0;min-height:30px;font-size:14px}
-.frow{width:100%;text-align:left;background:transparent;color:var(--ink);min-height:58px;padding:9px 4px;border-radius:0;display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--ln);font-weight:400}.frow:last-child{border-bottom:0}
+.frow{width:100%;text-align:left;background:transparent;color:var(--ink);min-height:50px;padding:8px 4px;border-radius:0;display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--ln);font-weight:400}.frow:last-child{border-bottom:0}
 
 .pills.fit7{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;overflow:visible}.pills.fit7 .pill{padding:0;min-width:0}.tag.g{background:var(--tint);color:var(--acd)}
 .snk{display:flex;gap:10px;align-items:center;padding:12px 14px;background:var(--tint);border-radius:16px;margin:10px 0;color:var(--ink);font-size:15px}
 #mtp button.on{background:var(--ac);color:#fff}img:not([src]){visibility:hidden}.tab h2:first-child{margin-top:4px}
 /* Today */
-.hero{border-radius:30px;padding:20px;color:#fff;background:radial-gradient(120% 90% at 0% 0%,#1f8a5f 0%,#0f4a35 62%,#0a2f23 100%);box-shadow:0 14px 32px rgba(15,74,53,.26);margin-bottom:12px}
+.hero{border-radius:30px;padding:20px;color:#fff;background:radial-gradient(120% 90% at 0% 0%,#c1562f 0%,#7a3420 62%,#3a1c12 100%);box-shadow:0 14px 32px rgba(122,52,32,.26);margin-bottom:12px}
 .hero-top{display:flex;align-items:center;gap:18px}.ringw{position:relative;width:150px;height:150px;flex:none}.ringw svg{display:block}
-.rt{fill:none;stroke:rgba(255,255,255,.18);stroke-width:12}.rp{fill:none;stroke:#fff;stroke-width:12;stroke-linecap:round;transition:stroke-dasharray .6s}.rp.ov{stroke:#ffb067}
+.rt{fill:none;stroke:rgba(255,255,255,.18);stroke-width:12}.rp{fill:none;stroke:#fff;stroke-width:12;stroke-linecap:round;transition:stroke-dasharray .6s}.rp.ov{stroke:#ffd666}
 .ringc{position:absolute;inset:0;display:grid;place-content:center;text-align:center;line-height:1.1}.ringc span{font-size:13px;opacity:.8}.ringc b{font-size:38px;font-weight:800;letter-spacing:-.02em;margin:3px 0}
 .hero-side{flex:1;display:grid;gap:12px}.hs b{font-size:22px;display:block;font-weight:700;line-height:1.2}.hs span{font-size:13px;opacity:.75}
 .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}.mg span{font-size:12px;opacity:.8;display:block}.mg b{font-size:15px;font-weight:700}
-.mb{height:6px;border-radius:3px;background:rgba(255,255,255,.2);margin-top:6px;overflow:hidden}.mb i{display:block;height:100%;background:#fff;border-radius:3px}.mb i.ov{background:#ffb067}
+.mb{height:6px;border-radius:3px;background:rgba(255,255,255,.2);margin-top:6px;overflow:hidden}.mb i{display:block;height:100%;background:#fff;border-radius:3px}.mb i.ov{background:#ffd666}
 .badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff}.exh .badge{background:var(--tint);color:var(--acd)}
-.hero-note{font-size:12px;opacity:.75;margin-top:12px}.hero-empty{display:grid;gap:8px;justify-items:start}.hero-empty b{font-size:20px}.hero-empty span{opacity:.8;font-size:14px}.hero-empty button{background:#fff;color:#0f4a35}
-.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}.chip{background:var(--card);border-radius:18px;padding:12px 14px;box-shadow:var(--sh)}.chip span{display:block;font-size:12px;color:var(--mut)}.chip b{font-size:18px;font-weight:700}
+.hero-note{font-size:12px;opacity:.75;margin-top:12px}.hero-empty{display:grid;gap:8px;justify-items:start}.hero-empty b{font-size:20px}.hero-empty span{opacity:.8;font-size:14px}.hero-empty button{background:#fff;color:#7a3420}
+.chips{display:grid;grid-template-columns:repeat(3,1fr);background:var(--card);border-radius:20px;box-shadow:var(--sh);margin-bottom:12px;overflow:hidden}.chip{padding:12px 6px;text-align:center;border-left:1px solid var(--ln)}.chip:first-child{border-left:0}.chip span{display:block;font-size:12px;color:var(--mut)}.chip b{font-size:18px;font-weight:700}
 details.more{margin:-4px 2px 12px}details.more summary{font-size:13px;color:var(--mut);cursor:pointer;padding:4px 0}
 .exh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.exs{margin-top:10px}
 .pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}.pills::-webkit-scrollbar{display:none}.pill{flex:none;min-height:40px;padding:0 16px;border-radius:999px;background:var(--tint);color:var(--ink);font-size:14px}.pill.on{background:var(--ac);color:#fff}.pills.fit{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;overflow:visible}.pills.fit .pill{padding:0;min-width:0}
@@ -98,7 +102,7 @@ dialog[open]{animation:sheet .26s cubic-bezier(.2,.8,.2,1)}@keyframes sheet{from
 dialog::backdrop{background:rgba(8,18,13,.5)}dialog::before{content:'';display:block;width:42px;height:5px;border-radius:3px;background:var(--ln);margin:6px auto 14px}
 .stk{position:sticky;bottom:calc(-22px - env(safe-area-inset-bottom));background:var(--card);padding:12px 0 calc(22px + env(safe-area-inset-bottom));margin-top:10px}
 .sh-t{font-size:20px;font-weight:800;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:6px}.tile{flex-direction:column;min-height:108px;background:var(--tint);color:var(--ink);border-radius:20px;font-size:14px}.tile svg{color:var(--ac)}
-.simg{width:100%;max-height:150px;object-fit:cover;border-radius:18px;margin-bottom:12px}.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.acts .alt{flex:1;min-width:30%}.danger{color:#d4543f!important}
+.simg{width:100%;max-height:150px;object-fit:cover;border-radius:18px;margin-bottom:12px}.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.acts .alt{flex:1;min-width:30%}.danger{color:#c43d3d!important}
 #toast{position:fixed;left:16px;right:16px;bottom:calc(96px + env(safe-area-inset-bottom));z-index:99;background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:16px;display:none;font-size:14px;max-width:528px;margin:0 auto}
 @media(prefers-reduced-motion:reduce){dialog[open]{animation:none}button{transition:none}.rp{transition:none}}
 </style></head><body><main>
@@ -109,7 +113,6 @@ dialog::backdrop{background:rgba(8,18,13,.5)}dialog::before{content:'';display:b
 <div class="chips" id="chips"></div>
 <details class="more"><summary>更多健康數據</summary><div id="hxd"></div></details>
 <div class="card" id="exc"></div>
-<div class="card" id="tagc" hidden></div>
 <div class="card" id="rtn" hidden></div>
 <div class="callout warn" id="tip" hidden></div>
 <div class="sech"><h2>今天吃了什麼</h2></div>
@@ -183,13 +186,15 @@ dialog::backdrop{background:rgba(8,18,13,.5)}dialog::before{content:'';display:b
 <p class="mut">估算值，非醫療建議；有慢性病或特殊情況請問醫師、營養師。改完請按下方「儲存設定」。</p></details>
 
 <details class="card"><summary><span class="si"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></span>提醒與自動總結</summary>
-<label><input type="checkbox" id="rd" checked>每日記錄飲食與今日總結</label><input id="rdt" type="time" value="21:00">
-<label><input type="checkbox" id="rw" checked>每週檢討</label><div class="tm"><select id="rwd"><option value="1">週日</option><option value="2">週一</option><option value="3">週二</option><option value="4">週三</option><option value="5">週四</option><option value="6">週五</option><option value="7">週六</option></select><input id="rwt" type="time" value="20:00"></div>
-<label><input type="checkbox" id="rm" checked>每月檢討</label><div class="tm"><select id="rmd"><option value="1">1 日</option><option value="2">2 日</option><option value="3">3 日</option><option value="4">4 日</option><option value="5">5 日</option><option value="6">6 日</option><option value="7">7 日</option><option value="8">8 日</option><option value="9">9 日</option><option value="10">10 日</option><option value="11">11 日</option><option value="12">12 日</option><option value="13">13 日</option><option value="14">14 日</option><option value="15">15 日</option><option value="16">16 日</option><option value="17">17 日</option><option value="18">18 日</option><option value="19">19 日</option><option value="20">20 日</option><option value="21">21 日</option><option value="22">22 日</option><option value="23">23 日</option><option value="24">24 日</option><option value="25">25 日</option><option value="26">26 日</option><option value="27">27 日</option><option value="28">28 日</option></select><input id="rmt" type="time" value="20:00"></div>
-<label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0"><input type="checkbox" id="aut" checked style="margin-top:4px"><span>到時間自動產生 AI 總結<br><span class="mut">錯過的，下次開 App 會補上</span></span></label>
-<label style="display:flex;gap:8px;align-items:flex-start;margin:10px 0"><input type="checkbox" id="bgr" checked style="margin-top:4px"><span>App 沒開時也在背景產生<br><span class="mut">需允許通知；系統約 15 分鐘以上才叫醒一次，省電設定要設為「不受限制」</span></span></label>
-<p class="mut" id="bgst" style="font-size:13px;margin:0 0 10px"></p>
-<button id="remind" class="alt">套用提醒時間</button></details>
+<div class="relm"><label><input type="checkbox" id="rd" checked>每日總結</label><input id="rdt" type="time" value="21:00"></div>
+<div class="relm"><label><input type="checkbox" id="rw" checked>每週檢討</label><div class="tm"><select id="rwd"><option value="1">週日</option><option value="2">週一</option><option value="3">週二</option><option value="4">週三</option><option value="5">週四</option><option value="6">週五</option><option value="7">週六</option></select><input id="rwt" type="time" value="20:00"></div></div>
+<div class="relm"><label><input type="checkbox" id="rm" checked>每月檢討</label><div class="tm"><select id="rmd"><option value="1">1 日</option><option value="2">2 日</option><option value="3">3 日</option><option value="4">4 日</option><option value="5">5 日</option><option value="6">6 日</option><option value="7">7 日</option><option value="8">8 日</option><option value="9">9 日</option><option value="10">10 日</option><option value="11">11 日</option><option value="12">12 日</option><option value="13">13 日</option><option value="14">14 日</option><option value="15">15 日</option><option value="16">16 日</option><option value="17">17 日</option><option value="18">18 日</option><option value="19">19 日</option><option value="20">20 日</option><option value="21">21 日</option><option value="22">22 日</option><option value="23">23 日</option><option value="24">24 日</option><option value="25">25 日</option><option value="26">26 日</option><option value="27">27 日</option><option value="28">28 日</option></select><input id="rmt" type="time" value="20:00"></div></div>
+<div class="relm">
+<label class="swrow"><input type="checkbox" id="aut" checked><span><b>自動產生 AI 總結</b><br><span class="mut">錯過的，下次開 App 會補上</span></span></label>
+<label class="swrow"><input type="checkbox" id="bgr" checked><span><b>App 背景產生</b><br><span class="mut">需允許通知，約 15 分鐘後才會更新</span></span></label>
+</div>
+<p class="callout" id="bgst" style="margin-top:10px"></p>
+<button id="remind" class="alt" style="width:100%">套用提醒時間</button></details>
 <details class="card"><summary><span class="si"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 11.1l-8.5 8.5a1.5 1.5 0 0 1-2.1 0L4 13.6V4h9.6l7 7a1.5 1.5 0 0 1 0 2.1z"/><circle cx="8.5" cy="8.5" r="1.2"/></svg></span>標記</summary>
 <div id="tagmgr"></div>
 <p class="mut">在「今天」或歷史的某一天可以選擇標記。</p></details>
@@ -206,7 +211,7 @@ dialog::backdrop{background:rgba(8,18,13,.5)}dialog::before{content:'';display:b
 <p class="mut" id="bkl"></p>
 <p class="mut">資料只保留最近 5 年，更早的會自動刪除。</p></details>
 <button id="saveP" style="width:100%">儲存設定</button>
-<p class="mut" style="text-align:center;font-size:12px;margin-top:10px">版本 2026.10.14-a（食物庫版面）</p>
+<p class="mut" style="text-align:center;font-size:12px;margin-top:10px">版本 2026.10.15-b（換配色）</p>
 </section>
 </main>
 <nav id="nav" aria-label="主選單"><button data-tab="today"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/></svg></span><span>今天</span></button><button data-tab="trend"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"/><path d="M8 15l3.5-4 3 3L20 7"/></svg></span><span>趨勢</span></button><button data-tab="hist"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></span><span>歷史</span></button><button data-tab="food"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16a8 8 0 0 1-16 0z"/><path d="M9 8c0-1.6 1.2-1.6 1.2-3.2M14 8c0-1.6 1.2-1.6 1.2-3.2"/></svg></span><span>食物庫</span></button><button data-tab="set"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.2" fill="var(--card)"/><circle cx="15.5" cy="12" r="2.2" fill="var(--card)"/><circle cx="8" cy="17" r="2.2" fill="var(--card)"/></svg></span><span>設定</span></button></nav>
@@ -412,9 +417,29 @@ async function ai(content,system,max=1500){
   return j.content.map(c=>c.text||'').join('');
 }
 
-const shrink=f=>new Promise((ok,no)=>{const u=URL.createObjectURL(f),i=new Image();
-  i.onload=()=>{const m=640/Math.max(i.width,i.height,640),c=document.createElement('canvas');c.width=Math.max(1,i.width*m);c.height=Math.max(1,i.height*m);c.getContext('2d').drawImage(i,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL('image/jpeg',.6))};
-  i.onerror=()=>{URL.revokeObjectURL(u);no(Error('無法讀取這張照片，可能是不支援的格式（例如 HEIC）'))};i.src=u});
+const isHeic=f=>/heic|heif/i.test(f.type)||/\.(heic|heif)$/i.test(f.name||'');
+var _heicLoad=null;
+function loadHeic2any(){
+  if(window.heic2any)return Promise.resolve();
+  if(_heicLoad)return _heicLoad;
+  return _heicLoad=new Promise((ok,no)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.4/heic2any.min.js';
+    s.onload=()=>ok();s.onerror=()=>{_heicLoad=null;no(Error('需要連上網路才能轉換 HEIC 照片，請檢查網路連線'))};
+    document.head.appendChild(s);
+  });
+}
+const decodeImg=u=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(Error('無法讀取這張照片，可能是不支援的格式'));i.src=u});
+async function shrink(f){
+  let blob=f,u='';
+  if(isHeic(f)){
+    try{await loadHeic2any();let out=await heic2any({blob:f,toType:'image/jpeg',quality:.7});if(Array.isArray(out))out=out[0];blob=out}
+    catch(e){throw Error(e&&/網路/.test(e.message)?e.message:'這張 HEIC 照片無法轉換，換一張試試或改用 JPG/PNG')}
+  }
+  u=URL.createObjectURL(blob);
+  try{const i=await decodeImg(u);const m=640/Math.max(i.width,i.height,640),c=document.createElement('canvas');c.width=Math.max(1,i.width*m);c.height=Math.max(1,i.height*m);c.getContext('2d').drawImage(i,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.6)}
+  finally{URL.revokeObjectURL(u)}
+}
 
 $('#cam').onchange=async e=>{const f=e.target.files[0];const lk=e.target.dataset.lock;delete e.target.dataset.lock;e.target.value='';if(!f)return;try{openMeal(await shrink(f),lk||undefined)}catch(err){toast(err.message)}};
 
@@ -567,7 +592,7 @@ function renderFcatf(){
 $('#fcatf').onclick=e=>{const b=e.target.closest('[data-fcf]');if(!b)return;curFcat=b.dataset.fcf;renderFcatf();renderFoods()};
 function renderFoods(){
   const q=$('#fq').value.trim(),all=foodMatch(q).filter(f=>!curFcat||(f.cat||guessCat(f.name))===curFcat),sh=all.slice(0,30);
-  $('#flist').innerHTML=sh.length?`<div class="grp">${sh.map(f=>`<button class="frow" data-f="${f.id}">${foodIcon(f)}<span class="mmain"><b>${esc(f.name)}</b><br><span class="mut">${esc(f.unit)}</span><span class="chipr">${mchips(f)}</span></span><span class="mk"><b>${f.kcal}</b><span>大卡</span></span></button>`).join('')}</div>`
+  $('#flist').innerHTML=sh.length?`<div class="grp">${sh.map(f=>`<button class="frow" data-f="${f.id}">${foodIcon(f)}<span class="mmain"><b>${esc(f.name)}</b><span class="chipr"><span class="mut">${esc(f.unit)}</span>　${mchips(f)}</span></span><span class="mk"><b>${f.kcal}</b><span>大卡</span></span></button>`).join('')}</div>`
     :`<div class="empty"><b>${db.foods.length?'找不到符合的食物':'食物庫是空的'}</b><span class="mut">${db.foods.length?'換個關鍵字或分類試試':'按右上角「＋」新增常吃的食物'}</span></div>`;
   if(all.length>30)$('#flist').insertAdjacentHTML('beforeend',`<p class="mut">共 ${all.length} 項，輸入關鍵字可縮小範圍</p>`);
   document.querySelectorAll('#flist [data-f]').forEach(b=>b.onclick=()=>openFoodSheet(db.foods.find(f=>f.id===b.dataset.f)));
@@ -719,7 +744,7 @@ function nutDig(d){const{t,n}=nutSum([d]);return n.meals?`（蛋白質${Math.rou
 function tgLine(){const t=targets();return t&&t.kcal?`\n${t.bmr?`基礎代謝${t.bmr}kcal、每日總消耗${t.tdee}kcal。`:''}每日營養目標：熱量${t.kcal}kcal、蛋白質${t.p??'-'}g、碳水${t.c??'-'}g、脂肪${t.f??'-'}g、纖維${t.fib??'-'}g。`:''}
 const NEEDSET='<p class="mut" style="margin:0">到「設定 → 每日營養目標」填入性別、年齡、活動量（身高、體重也要有），就能算出你每天需要的熱量與營養。</p><button class="alt sm" id="gonut" style="margin-top:8px">前往設定</button>';
 function renderNut(){
-  const tg=targets();renderHero();renderEx();renderTagc();renderRtn();renderRtList();renderTagMgr();
+  const tg=targets();renderHero();renderEx();renderRtn();renderRtList();renderTagMgr();
   // 近 7 天平均
   const ds=[...Array(7)].map((_,i)=>db.days[ymd(new Date(Date.now()-i*864e5))]||{meals:[]}),s7=nutSum(ds),nd=s7.n.days;
   if(!nd)$('#nut7').innerHTML='<p class="mut" style="margin:0">近 7 天還沒有飲食紀錄。</p>';
@@ -823,8 +848,10 @@ function renderHero(){
   $('#hero').innerHTML=h;const b=$('#gonut');if(b)b.onclick=()=>{showTab('set');$('#nutgrp').open=true};
 }
 function renderEx(){
-  const k=today(),cur=day(k).ex||'',tg=targets(k);
-  $('#exc').innerHTML=`<div class="exh"><b>今日運動強度</b><span class="badge">${cur&&tg&&tg.exDelta!=null?`目標 ${tg.exDelta>=0?'+':''}${tg.exDelta} 大卡`:'依平常'}</span></div><div class="pills fit">${[['','平常'],['rest','休息'],['light','輕度'],['mod','中度'],['high','高強度']].map(([v,l])=>`<button class="pill${cur===v?' on':''}" data-ex="${v}">${l}</button>`).join('')}</div>${cur?`<div class="mut exs">${EXH[cur]}</div>`:''}`;
+  const k=today(),cur=day(k).ex||'',tg=targets(k),badge=cur&&tg&&tg.exDelta?`<span class="badge">${tg.exDelta>=0?'+':''}${tg.exDelta} 大卡</span>`:'';
+  let h=`<div class="exh"><b>今日運動強度</b>${badge}</div><div class="pills fit">${[['','平常'],['rest','休息'],['light','輕度'],['mod','中度'],['high','高強度']].map(([v,l])=>`<button class="pill${cur===v?' on':''}" data-ex="${v}">${l}</button>`).join('')}</div>${cur?`<div class="mut exs">${EXH[cur]}</div>`:''}`;
+  if((db.tags||[]).length)h+=`<div class="relm" style="margin-top:14px">${tagPills(k,day(k))}</div>`;
+  $('#exc').innerHTML=h;
 }
 document.addEventListener('click',e=>{
   const ak=e.target.closest('[data-addk]');if(ak){openAddFor(ak.dataset.addk);return}
@@ -944,7 +971,6 @@ function applyRoutines(){
       if(addRoutine(r.id,k,false))n++}}
   if(n){save();render();toast(`已自動加入 ${n} 筆固定餐`)}
 }
-function renderTagc(){const el=$('#tagc');if(!el)return;if(!(db.tags||[]).length){el.hidden=true;return}el.hidden=false;el.innerHTML=tagPills(today(),day(today()))}
 function renderRtn(){
   const el=$('#rtn');if(!el)return;const d=db.days[today()]||{meals:[]},wd=new Date().getDay();
   const L=(db.routines||[]).filter(r=>!(r.days&&!r.days.includes(wd))&&!d.meals.some(m=>m.rid===r.id));
@@ -1024,7 +1050,7 @@ function tagN(t){return(db.tags||[]).find(x=>x.id===t)?.name||t}
 function toggleTag(k,id){const d=day(k);d.tags=d.tags||[];const i=d.tags.indexOf(id);if(i>=0)d.tags.splice(i,1);else d.tags.push(id);if(!d.tags.length)delete d.tags;save();render()}
 function tagPills(k,d){
   const L=db.tags||[];if(!L.length)return'';const cur=new Set(d.tags||[]);
-  return`<h3 style="margin-top:14px">標記</h3><div class="pills">${L.map(t=>`<button class="pill tagp${cur.has(t.id)?' on':''}" style="${cur.has(t.id)?`background:${tagC(t.id)};color:#fff`:`color:${tagC(t.id)}`}" data-tgk="${k}" data-tg="${t.id}">${esc(t.name)}</button>`).join('')}</div>`;
+  return`<h3 style="margin-top:0">標記</h3><div class="pills">${L.map(t=>`<button class="pill tagp${cur.has(t.id)?' on':''}" style="${cur.has(t.id)?`background:${tagC(t.id)};color:#fff`:`color:${tagC(t.id)}`}" data-tgk="${k}" data-tg="${t.id}">${esc(t.name)}</button>`).join('')}</div>`;
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-tg]');if(b)toggleTag(b.dataset.tgk,b.dataset.tg)});
 function tagDots(d){if(!d||!d.tags||!d.tags.length)return'';const ids=d.tags.filter(t=>(db.tags||[]).some(x=>x.id===t));if(!ids.length)return'';
@@ -1037,7 +1063,7 @@ function renderTagMgr(){
     db.tags=db.tags||[];db.tags.push({id:'tg'+Date.now().toString(36),name:n,c:db.tags.length});save();render();toast('已新增')};
   el.querySelectorAll('[data-tgdel]').forEach(b=>b.onclick=()=>{if(!confirm('刪除這個標記？已經標記過的天數會一併移除標記。'))return;const id=b.dataset.tgdel;db.tags=db.tags.filter(t=>t.id!==id);Object.values(db.days).forEach(d=>{if(d.tags){d.tags=d.tags.filter(t=>t!==id);if(!d.tags.length)delete d.tags}});save();render()});
 }
-function pickRow(f,attr){return`<button class="frow" style="padding:6px 4px;min-height:54px" data-${attr}="${f.id}">${foodIcon(f)}<span class="mmain"><b>${esc(f.name)}</b><br><span class="mut">${esc(f.unit)}</span><span class="chipr">${mchips(f)}</span></span><span class="icb" style="width:32px;height:32px;min-height:32px;background:var(--ac);color:#fff;box-shadow:none">+</span></button>`}
+function pickRow(f,attr){return`<button class="frow" style="padding:6px 4px;min-height:50px" data-${attr}="${f.id}">${foodIcon(f)}<span class="mmain"><b>${esc(f.name)}</b><span class="chipr"><span class="mut">${esc(f.unit)}</span>　${mchips(f)}</span></span><span class="icb" style="width:32px;height:32px;min-height:32px;background:var(--ac);color:#fff;box-shadow:none">+</span></button>`}
 function selRow(it,i,qAttr,rmAttr){return`<div class="frow" style="padding:6px 4px;min-height:54px">${foodIcon(it)}<span class="mmain"><b>${esc(it.name)}</b><br><span class="mut">× ${esc(it.unit)}</span></span><div class="qstep"><button class="alt" data-${qAttr}d="${i}" aria-label="減少">−</button><input type="number" min="0.25" step="0.25" value="${it.qty}" data-${qAttr}="${i}" aria-label="份數"><button class="alt" data-${qAttr}i="${i}" aria-label="增加">+</button></div><button class="icb" style="width:32px;height:32px;min-height:32px;margin-left:4px" data-${rmAttr}="${i}" aria-label="移除">×</button></div>`}
 const TT={today:'今天',trend:'趨勢',hist:'歷史紀錄',food:'食物庫',set:'設定'};
 function showTab(t){document.querySelectorAll('.tab').forEach(e=>e.hidden=e.id!=='t-'+t);document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));$('#ttl').textContent=TT[t];$('#subttl').textContent=t==='today'?dateStr():SUB[t]||'';$('#fab').hidden=t!=='today';scrollTo(0,0)}
