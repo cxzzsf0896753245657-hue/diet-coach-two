@@ -12,7 +12,8 @@ jobs:
         with: { node-version: 22 }
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 21 }
-      - run: npm install
+      # 依 package-lock.json 安裝「完全相同」的套件版本，避免哪天外掛改版害打包壞掉
+      - run: npm ci
       - run: npx cap add android
       - run: bash scripts/patch-android.sh
       - run: npx cap sync android
@@ -23,7 +24,7 @@ jobs:
       - name: Fallback build without background runner
         if: steps.full.outcome == 'failure'
         run: |
-          echo "背景執行外掛打包失敗，改用不含背景執行的版本" >> "$GITHUB_STEP_SUMMARY"
+          echo "⚠️ 背景執行外掛打包失敗，改用不含背景執行的版本（App 內設定頁會註明）" >> "$GITHUB_STEP_SUMMARY"
           node -e "const f='capacitor.config.json',c=require('./'+f);delete c.plugins;require('fs').writeFileSync(f,JSON.stringify(c,null,2))"
           npm uninstall @capacitor/background-runner
           npx cap sync android
