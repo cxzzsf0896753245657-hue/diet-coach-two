@@ -21,8 +21,15 @@ android {
 }
 GRADLE
 
-# --- 每次打包版本號遞增，確保一定是「更新」而不是同版本或降版 ---
-sed -i -E "s/versionCode [0-9]+/versionCode ${GITHUB_RUN_NUMBER:-1}/" android/app/build.gradle
+# --- 版本號：用「從 1970 年起算的分鐘數」，一定比上一次打包大 ---
+# 舊做法用 GITHUB_RUN_NUMBER，換新 repo 會從 1 重算，手機會拒絕「降版」安裝。
+# 分鐘數目前約 2,960 萬，遠大於舊版用過的數字，而且不管換哪個 repo 都會一直變大（上限 21 億，可用到西元 5000 年後）。
+VC=$(( $(date +%s) / 60 ))
+VN="$(TZ=Asia/Taipei date +%Y.%m.%d.%H%M)"
+sed -i -E "s/versionCode [0-9]+/versionCode ${VC}/" android/app/build.gradle
+sed -i -E "s/versionName \"[^\"]*\"/versionName \"${VN}\"/" android/app/build.gradle
+echo "versionCode=${VC} versionName=${VN}"
+echo "版本號：${VN}（versionCode ${VC}）" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
 
 # --- 背景執行外掛需要的 Gradle 設定（官方文件：flatDir 加入外掛的 libs 資料夾）---
 BR_DIR="'../../node_modules/@capacitor/background-runner/android/src/main/libs'"

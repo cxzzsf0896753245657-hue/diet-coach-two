@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@capacitor/android": "^8.0.0",
-    "@capacitor/cli": "^8.0.0",
-    "@capacitor/core": "^8.0.0",
-    "@capacitor/filesystem": "^8.0.0",
-    "@capacitor/share": "^8.0.0",
-    "@capacitor/local-notifications": "^8.0.0",
-    "@capgo/capacitor-health": "latest",
-    "@capacitor/background-runner": "latest"
+    "@capacitor/android": "8.6.0",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/background-runner": "3.0.0",
+    "@capacitor/cli": "8.6.0",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/filesystem": "8.1.5",
+    "@capacitor/local-notifications": "8.3.1",
+    "@capacitor/share": "8.0.3",
+    "@capgo/capacitor-health": "8.11.14"
   }
 }

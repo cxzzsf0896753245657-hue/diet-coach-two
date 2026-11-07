@@ -4,7 +4,7 @@
   "webDir": "www",
   "plugins": {
     "BackgroundRunner": {
-      "label": "com.example.dietcoach.background",
+      "label": "com.dietcoach.app.background",
       "src": "runners/background.js",
       "event": "checkSummaries",
       "repeat": true,
