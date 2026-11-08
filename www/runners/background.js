@@ -56,15 +56,24 @@ var DCJobs = (function () {
         body: JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: 1500, system: st.sys, messages: [{ role: 'user', content: prompt }] })
       }).then(function (r) { return r.json().catch(function () { return {} }).then(function (j) { if (!r.ok || j.error) throw new Error(errMsg(r.status, j)); return (j.content || []).map(function (c) { return c.text || '' }).join('') }) });
     }
-    return fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(st.model || 'gemini-3.8-flash') + ':generateContent', {
-      method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': st.gkey },
-      body: JSON.stringify({ systemInstruction: { parts: [{ text: st.sys }] }, contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 6000 } })
-    }).then(function (r) {
-      return r.json().catch(function () { return {} }).then(function (j) {
-        if (!r.ok || j.error) throw new Error(errMsg(r.status, j));
-        var t = ((j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || []).filter(function (x) { return !x.thought }).map(function (x) { return x.text || '' }).join('');
-        if (!t) throw new Error('AI 沒有回覆內容'); return t;
+    // 沒自訂模型：先用 gemini-3.8-flash（思考程度設低），額度用完或失敗時改用 gemini-3.1-flash-lite
+    function gem(model, think) {
+      var gc = { maxOutputTokens: 6000 }; if (think) gc.thinkingConfig = { thinkingLevel: think };
+      return fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent', {
+        method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': st.gkey },
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: st.sys }] }, contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: gc })
+      }).then(function (r) {
+        return r.json().catch(function () { return {} }).then(function (j) {
+          if (!r.ok || j.error) { var e = new Error(errMsg(r.status, j)); e.status = r.status; throw e }
+          var t = ((j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || []).filter(function (x) { return !x.thought }).map(function (x) { return x.text || '' }).join('');
+          if (!t) throw new Error('AI 沒有回覆內容'); return t;
+        });
       });
+    }
+    if (st.model) return gem(st.model, null);
+    return gem('gemini-3.8-flash', 'low').catch(function (e) {
+      if (e.status === 429 || e.status === 404 || e.status === 400 || e.status >= 500) return gem('gemini-3.1-flash-lite', null);
+      throw e;
     });
   }
   function run() {

@@ -204,7 +204,7 @@ async function syncInner(days,quiet){
 // ======================= AI =======================
 function aiErr(status,j){
   const m=j?.error?.message||'';
-  if(status===429)return'使用次數超過限制（免費額度可能用完），請稍後再試';
+  if(status===429)return /PerDay|per day/i.test(JSON.stringify(j||{}))?'今天的免費額度用完了，明天會重置（也可以到設定換模型）':'免費額度每分鐘的次數用完了，請稍等一分鐘再試';
   if(status===401||status===403||/API key not valid|API_KEY_INVALID|invalid x-api-key/i.test(m))return'金鑰無效或沒有權限，請到「設定 → AI 連線」檢查';
   if(status===404||/not found|is not supported/i.test(m))return'找不到這個模型名稱，請到「設定 → AI 連線」檢查';
   if(status>=500)return'AI 服務暫時忙碌，請稍後再試';
@@ -212,31 +212,76 @@ function aiErr(status,j){
 }
 async function aiFetch(url,opt,ms=90000){
   const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
-  try{const r=await fetch(url,{...opt,signal:c.signal});const j=await r.json().catch(()=>({}));if(!r.ok||j.error){const e=Error(aiErr(r.status,j));e.status=r.status;throw e}return j}
-  catch(e){if(e.name==='AbortError')throw Error('AI 回應逾時，請檢查網路後再試');if(e instanceof TypeError)throw Error('連不上 AI 服務，請檢查網路');throw e}
+  try{const r=await fetch(url,{...opt,signal:c.signal});const j=await r.json().catch(()=>({}));if(!r.ok||j.error){const e=Error(aiErr(r.status,j));e.status=r.status;e.body=j;throw e}return j}
+  catch(e){if(e.name==='AbortError'){const x=Error('AI 回應逾時，請檢查網路後再試');x.timeout=true;throw x}if(e instanceof TypeError){const x=Error('連不上 AI 服務，請檢查網路');x.net=true;throw x}throw e}
   finally{clearTimeout(t)}
 }
+// ---------- Gemini 免費額度處理 ----------
+// 免費方案每個模型每分鐘、每天的次數都有上限（Flash 約每分鐘 5 次、每天 20 次左右）。
+// 每分鐘的上限：照 Google 回傳的等待時間自動等待後重試；每天的上限：記下來，今天改用 GEMINI_FB。
 const GEMINI_DEF='gemini-3.8-flash',GEMINI_FB='gemini-3.1-flash-lite';
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function retryMs(j){
+  const s=JSON.stringify(j||{});let m=/"retryDelay":"([\d.]+)s"/.exec(s);if(m)return +m[1]*1000;
+  m=/retry in (?:(\d+)h)?(?:(\d+)m)?([\d.]+)s/i.exec(s);if(m)return((+m[1]||0)*3600+(+m[2]||0)*60+(+m[3]||0))*1000;return null;
+}
+const isPerDay=j=>/PerDay|per day/i.test(JSON.stringify(j||{}));
+function gemOut(model){try{return(JSON.parse(localStorage.getItem('dc_gemq')||'{}')[model]||0)>Date.now()}catch(e){return false}}
+function gemOutSet(model,ms){try{const o=JSON.parse(localStorage.getItem('dc_gemq')||'{}');o[model]=Date.now()+Math.min(ms,24*3600e3);localStorage.setItem('dc_gemq',JSON.stringify(o))}catch(e){}}
+// 使用紀錄（設定頁顯示，方便知道是不是額度用完）
+function aiLog(model,err){
+  const t=today(),u=db.aiUse&&db.aiUse.d===t?db.aiUse:(db.aiUse={d:t,n:0,m:{}});
+  if(model){u.n++;u.m[model]=(u.m[model]||0)+1;u.last=model}
+  if(err)db.aiErr={at:new Date().toLocaleString(),msg:err};
+  save();if(curTab==='set')aiUi();
+}
+// 一次只送一個 AI 請求，避免同時送好幾張照片撞到每分鐘上限
+let aiChain=Promise.resolve();
+function aiQueued(fn){const r=aiChain.then(fn,fn);aiChain=r.catch(()=>{});return r}
 // json=true：要求 AI 只回 JSON（Gemini 用官方的 JSON 模式）
-async function ai(content,system,max=1500,json=false){
+function ai(content,system,max=1500,json=false){return aiQueued(()=>aiRaw(content,system,max,json))}
+async function aiRaw(content,system,max,json){
   const p=db.p,blocks=typeof content==='string'?[{type:'text',text:content}]:content;
   if((p.prov||'gemini')==='gemini'){
     if(!p.gkey)throw Error('請先在設定填入 Gemini API Key');
-    const body=JSON.stringify({systemInstruction:{parts:[{text:system}]},
+    const mk=think=>JSON.stringify({systemInstruction:{parts:[{text:system}]},
         contents:[{role:'user',parts:blocks.map(b=>b.type==='image'?{inlineData:{mimeType:b.source.media_type,data:b.source.data}}:{text:b.text})}],
-        generationConfig:{maxOutputTokens:Math.max(max*4,2048),...(json?{responseMimeType:'application/json'}:{})}});
-    const call=model=>aiFetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':p.gkey},body});
-    let j;
-    // 沒自訂模型時用 GEMINI_DEF；萬一這個名稱哪天被下架（404），自動退回 GEMINI_FB
-    if(p.gmodel)j=await call(p.gmodel);
-    else try{j=await call(GEMINI_DEF)}catch(e){if(e.status!==404&&e.status!==400)throw e;j=await call(GEMINI_FB)}
+        generationConfig:{maxOutputTokens:Math.max(max*4,2048),...(json?{responseMimeType:'application/json'}:{}),...(think?{thinkingConfig:{thinkingLevel:think}}:{})}});
+    const url=model=>`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+    const once=async(model,think)=>{
+      try{return await aiFetch(url(model),{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':p.gkey},body:mk(think)})}
+      catch(e){if(e.status===400&&think&&/thinking/i.test(e.message))return aiFetch(url(model),{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':p.gkey},body:mk(null)});throw e}
+    };
+    const withWait=async(model,think)=>{
+      for(let i=0;;i++){
+        try{return await once(model,think)}
+        catch(e){
+          if(e.status===429){const ms=retryMs(e.body),day=isPerDay(e.body)||(ms!=null&&ms>90e3);
+            if(!day&&i<2){const w=Math.min(ms??20e3,65e3);toast(`免費額度每分鐘有上限，${Math.ceil(w/1000)} 秒後自動重試…`);await sleep(w+500);continue}
+            if(day)gemOutSet(model,ms??6*3600e3)}
+          throw e}
+      }
+    };
+    let j,used;
+    if(p.gmodel){used=p.gmodel;j=await withWait(p.gmodel,null)}
+    else{
+      // 先用較準的 GEMINI_DEF（思考程度設低，回應比較快）；額度用完、找不到模型、逾時或服務忙碌時改用 GEMINI_FB
+      const order=gemOut(GEMINI_DEF)?[GEMINI_FB]:[GEMINI_DEF,GEMINI_FB];
+      for(const model of order){
+        try{j=await withWait(model,model===GEMINI_DEF?'low':null);used=model;break}
+        catch(e){if(model===GEMINI_FB||!(e.status===429||e.status===404||e.status===400||e.status>=500||e.timeout)){aiLog(null,e.message);throw e}}
+      }
+    }
+    aiLog(used);
     const t=(j.candidates?.[0]?.content?.parts||[]).filter(x=>!x.thought).map(x=>x.text||'').join('');
-    if(!t)throw Error('AI 沒有回覆內容，請再試一次');return t;
+    if(!t){const fr=j.candidates?.[0]?.finishReason;const m=fr==='MAX_TOKENS'?'AI 回覆被截斷，請再試一次':fr==='SAFETY'||fr==='PROHIBITED_CONTENT'?'AI 拒絕處理這張照片':'AI 沒有回覆內容，請再試一次';aiLog(null,m);throw Error(m)}
+    return t;
   }
   if(!p.key)throw Error('請先在設定填入 Claude API Key');
-  const j=await aiFetch('https://api.anthropic.com/v1/messages',{method:'POST',
+  let j;try{j=await aiFetch('https://api.anthropic.com/v1/messages',{method:'POST',
     headers:{'content-type':'application/json','x-api-key':p.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-sonnet-5-5',max_tokens:max,system,messages:[{role:'user',content}]})});
+    body:JSON.stringify({model:'claude-sonnet-5-5',max_tokens:max,system,messages:[{role:'user',content}]})})}catch(e){aiLog(null,e.message);throw e}
+  aiLog('claude-sonnet-5-5');
   const t=(j.content||[]).map(c=>c.text||'').join('');if(!t)throw Error('AI 沒有回覆內容，請再試一次');return t;
 }
 function parseJson(t){
@@ -625,7 +670,7 @@ $('#mgo').onclick=async()=>{
   if(!img&&!desc){m.ai=fromLib();save();render();toast(dkey===today()?'已加入':`已加入 ${dkey}`);if(dkey!==today())jumpTo(dkey);nextMeal();return}
   busy.add(m);save();render();toast(dkey===today()?'AI 分析中…':`已加入 ${dkey}，AI 分析中…`);const more=mq.length;nextMeal();if(!more&&dkey!==today())jumpTo(dkey);
   try{applyAI(m,await runMealAI(img,desc,items))}
-  catch(err){toast('分析失敗：'+err.message+(items.length?'（已先用食物庫數字）':'，可點這餐手動填數字'));if(items.length)m.ai=fromLib()}
+  catch(err){toast('分析失敗：'+err.message+(items.length?'（已先用食物庫數字）':'，可點這餐重試或手動填數字'));if(items.length)m.ai=fromLib();else m.aiErr=err.message}
   busy.delete(m);save();render();
 };
 // ---------- AI 餐點辨識：逐項拆解、參考使用者自己的資料、不確定時提問 ----------
@@ -654,7 +699,23 @@ async function runMealAI(img,desc,items,hints){
   const q=o.question&&o.question.text&&Array.isArray(o.question.options)&&o.question.options.length?{text:String(o.question.text).slice(0,60),opts:o.question.options.slice(0,4).map(x=>String(x).slice(0,12))}:null;
   return{ai:{name:String(o.name||desc||'餐點').slice(0,60),...tot,note:o.note?String(o.note).slice(0,120):undefined,...(L.length?{parts:L}:{}),...(conf?{conf}:{}),aiK:tot.kcal},q};
 }
-function applyAI(m,r){m.ai=r.ai;if(r.q)m.q=r.q;else delete m.q}
+// 沒有分析結果的餐點（失敗或舊版留下的）：列出來，一鍵依序重試
+function failedMeals(){const L=[];for(let i=0;i<3;i++){const k=addD(today(),-i);(db.days[k]?.meals||[]).forEach(m=>{if(!m.ai&&!busy.has(m)&&(m.imgId||m.desc||m.items?.length))L.push([k,m])})}return L}
+function renderFails(){
+  const L=failedMeals(),el=$('#mfail');
+  el.innerHTML=L.length?`<div class="callout warn" style="margin-bottom:10px"><b>有 ${L.length} 餐還沒有分析結果</b><p style="margin:4px 0 10px;font-size:14px">${esc(L.find(([,m])=>m.aiErr)?.[1].aiErr||'可能是網路或 AI 額度的問題')}</p><button class="sm" id="mretry">全部重試</button></div>`:'';
+  const b=$('#mretry');if(b)b.onclick=retryFailed;
+}
+async function retryFailed(){
+  const L=failedMeals();if(!L.length)return;L.forEach(([,m])=>busy.add(m));render();toast(`依序重新分析 ${L.length} 餐…`);let ok=0;
+  for(const[,m]of L){
+    try{const img=m.imgId?await getImg(m.imgId).catch(()=>null):null;applyAI(m,await runMealAI(img,m.desc||'',m.items||[]));ok++}
+    catch(e){m.aiErr=e.message}
+    busy.delete(m);save();render();
+  }
+  toast(ok===L.length?`${ok} 餐都分析好了`:`成功 ${ok} 餐，${L.length-ok} 餐失敗：${L.find(([,m])=>!m.ai)?.[1].aiErr||''}`);
+}
+function applyAI(m,r){m.ai=r.ai;delete m.aiErr;if(r.q)m.q=r.q;else delete m.q}
 // 回答 AI 的問題 → 帶著答案重新估算
 async function answerQ(k,id,i){
   const f=findMeal(k,id);if(!f||!f.m.q)return;const m=f.m,q=m.q;delete m.q;
@@ -694,6 +755,7 @@ async function openMealSheet(k,id){
   $('#se-n').value=a.name||'';$('#se-d').value=m.desc||'';[['k','kcal'],['p','protein_g'],['c','carb_g'],['f','fat_g'],['b','fiber_g']].forEach(([x,y])=>$('#se-'+x).value=f(a[y]));
   $('#se-t').value=m.t||'';$('#se-s').checked=isSnack(m);msOrig={name:a.name||'',kcal:a.kcal,protein_g:a.protein_g,carb_g:a.carb_g,fat_g:a.fat_g,fiber_g:a.fiber_g};
   msParts=(a.parts||[]).map(q=>({...q,x0:q.x??1,x:q.x??1}));renderParts(a.note);
+  $('#se-err').hidden=!(!m.ai&&m.aiErr);$('#se-err').textContent=m.aiErr?`上次辨識失敗：${m.aiErr}。可以按「儲存並重新辨識」再試一次，或直接填數字。`:'';
   $('#se-ph').textContent=m.imgId?'換照片':'補照片';$('#se-lib').hidden=!m.ai;
   const im=$('#se-img');im.hidden=!m.imgId;im.removeAttribute('src');
   openSheet($('#msd'));
@@ -718,7 +780,7 @@ $('#se-ai').onclick=async()=>{
   const pc=msParts.filter(q=>Math.abs(q.x-q.x0)>=.01).map(q=>q.x?`「${q.n}」是原本估計的 ${qfmt(q.x)} 倍`:`沒有吃「${q.n}」`);
   const hints=[nm&&nm!==msOrig.name?`名稱「${nm}」`:'',...pc,...(pc.length?[]:Object.keys(L).filter(k=>v[k]!=null&&v[k]!==msOrig[k]).map(k=>`${L[k]} ${v[k]}`))].filter(Boolean).join('、');
   sheetMeta(f);closeSheet($('#msd'));busy.add(m);save();render();toast('AI 重新辨識中…');
-  try{applyAI(m,await runMealAI(img,desc,items,hints))}catch(err){toast('辨識失敗：'+err.message)}
+  try{applyAI(m,await runMealAI(img,desc,items,hints))}catch(err){toast('辨識失敗：'+err.message);if(!m.ai)m.aiErr=err.message}
   busy.delete(m);save();render();
 };
 $('#se-ph').onclick=()=>{if(ms){attT=[ms.k,ms.id];$('#att').click()}};
@@ -921,8 +983,8 @@ const dateStr=()=>{const d=new Date();return`${d.getMonth()+1}月${d.getDate()}�
 
 // ======================= 「今天」分頁 =======================
 function mealRow(k,m){
-  const a=m.ai,b=busy.has(m),nm=a?.name||(b?'AI 辨識中…':'未分析'),kc=a?.kcal;
-  const macro=a?[a.protein_g!=null?`蛋白質 ${a.protein_g}g`:'',a.carb_g!=null?`碳水 ${a.carb_g}g`:'',a.fat_g!=null?`脂肪 ${a.fat_g}g`:''].filter(Boolean).join('　'):(b?'通常 5～20 秒':'點一下編輯');
+  const a=m.ai,b=busy.has(m),nm=a?.name||(b?'AI 辨識中…':m.aiErr?'辨識失敗':'未分析'),kc=a?.kcal;
+  const macro=a?[a.protein_g!=null?`蛋白質 ${a.protein_g}g`:'',a.carb_g!=null?`碳水 ${a.carb_g}g`:'',a.fat_g!=null?`脂肪 ${a.fat_g}g`:''].filter(Boolean).join('　'):(b?'通常 5～20 秒':m.aiErr?m.aiErr.slice(0,24):'點一下編輯');
   return`<button class="mrow${b?' busy':''}" data-mo="${k}|${m.id}">${m.imgId?`<img data-img="${m.imgId}" alt="">`:`<span class="mimg">${IC('bowl',26)}</span>`}<span class="mmain"><b>${esc(nm)}</b><span class="mut">${m.t}${m.rid?'<i class="tag g">固定</i>':''}${isSnack(m)?'<i class="tag">點心</i>':''}${m.q?'<i class="tag">待確認</i>':''}　${esc(macro)}</span></span><span class="mk"><b>${kc!=null?kc:'-'}</b><span>大卡</span></span></button>`;
 }
 function dayCard(k){
@@ -970,7 +1032,7 @@ function renderToday(){
   const ago=k=>k&&k!==today()?`<small class="mut" style="display:block;font-size:11px;font-weight:500">${+k.slice(5,7)}/${+k.slice(8)}</small>`:'';
   $('#chips').style.gridTemplateColumns='repeat(4,1fr)';
   $('#chips').innerHTML=[['體重 kg',lw!=null?lw:'-',ago(wk)],['體脂 %',lf!=null?lf:'-',ago(fk)],['步數',d.steps!=null?d.steps.toLocaleString():'-',''],['消耗 大卡',d.kcalOut!=null?(d.kcalEst?'≈':'')+d.kcalOut.toLocaleString():'-','']].map(([a,b,c])=>`<div class="chip"><span>${a}</span><b>${b}</b>${c}</div>`).join('');
-  renderQs();
+  renderQs();renderFails();
   $('#meals').innerHTML=d.meals.length?`<div class="grp">${d.meals.map(m=>mealRow(today(),m)).join('')}</div>`:`<div class="empty">${IC('bowl',34)}<b>今天還沒有紀錄</b><span class="mut">點右下角的 ＋，拍下第一餐</span></div>`;
   {const nw=db.rvh.at(-1),fresh=nw?.pk!==renderToday.np,rv=['day','week','month'].map(k=>latestRv(k)).filter(Boolean),el=$('#reviews'),op=new Set([...el.querySelectorAll('details[open]')].map(x=>x.dataset.k));renderToday.np=nw?.pk;
   // 剛產生新總結時自動展開它；其他時候保留使用者自己展開／收合的狀態
@@ -994,6 +1056,8 @@ function aiUi(){
   document.querySelectorAll('#provseg button').forEach(b=>b.classList.toggle('on',b.dataset.pv===pv));
   $('#gbox').hidden=pv!=='gemini';$('#cbox').hidden=pv!=='claude';
   $('#aist').textContent=k?`已儲存　••••${k.slice(-4)}`:'尚未設定金鑰';$('#aidot').classList.toggle('on',!!k);
+  const u=db.aiUse&&db.aiUse.d===today()?db.aiUse:null,e=db.aiErr;
+  $('#aiuse').innerHTML=(u?`今天已使用 AI ${u.n} 次（${Object.entries(u.m).map(([m,n])=>`${esc(m)} ${n} 次`).join('、')}）`:'今天還沒使用 AI')+(gemOut(GEMINI_DEF)?`<br>${GEMINI_DEF} 今天的免費額度已用完，暫時改用 ${GEMINI_FB}`:'')+(e?`<br>上次錯誤（${esc(e.at)}）：${esc(e.msg)}`:'');
 }
 var keyT=null;
 function keyAuto(){clearTimeout(keyT);keyT=setTimeout(()=>{db.p.gkey=$('#gkey').value.trim();db.p.key=$('#key').value.trim();db.p.gmodel=$('#gmodel').value.trim();db.p.prov=$('#prov').value;keysSave();save();aiUi()},300)}
