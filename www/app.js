@@ -795,11 +795,47 @@ function deleteMeal(k,id){
 var dayLock=null;
 function openAddFor(k){dayLock=k;openSheet($('#asd'))}
 $('#fab').onclick=()=>{dayLock=null;openSheet($('#asd'))};
-$('#ta-cam').onclick=()=>{closeSheet($('#asd'));if(dayLock)$('#cam').dataset.lock=dayLock;$('#cam').click()};
+$('#ta-cam').onclick=()=>{closeSheet($('#asd'));const lk=dayLock;
+  openCamera({onShot:async blob=>{try{openMeal(await shrink(blob),lk||undefined)}catch(err){toast(err.message)}},
+    onGallery:()=>openGallery(lk),onSystem:()=>{if(lk)$('#cam').dataset.lock=lk;$('#cam').click()}})};
 $('#ta-gal').onclick=()=>{closeSheet($('#asd'));openGallery(dayLock)};
 $('#ta-txt').onclick=()=>{closeSheet($('#asd'));openMeal(null,dayLock||undefined);dayLock=null};
-$('#ta-lbl').onclick=()=>{closeSheet($('#asd'));lbLock=dayLock;dayLock=null;$('#lblf').click()};
+$('#ta-lbl').onclick=()=>{closeSheet($('#asd'));lbLock=dayLock;dayLock=null;openLabelCam()};
+function openLabelCam(){openCamera({hint:'把營養標示對準畫面，靠近一點、避免反光',onShot:b=>lbFromFile(b),onGallery:()=>$('#lblf').click(),onSystem:()=>$('#lblf').click()})}
 $('#ta-rt').onclick=()=>{closeSheet($('#asd'));showTab('food');setFt('rt')};
+
+// ======================= App 內建相機 =======================
+// 系統相機 App 會沿用上次的鏡頭（常常是前鏡頭），Android 也沒有可靠的方法指定；所以直接在 App 裡開後鏡頭。
+let cam={stream:null,facing:'environment',o:null};
+async function openCamera(o){
+  if(!navigator.mediaDevices?.getUserMedia){o.onSystem();return}
+  cam.o=o;cam.facing='environment';$('#camhint').textContent=o.hint||'';$('#camhint').hidden=!o.hint;$('#camerr').hidden=true;
+  openSheet($('#camd'));await camStart();
+}
+async function camStart(){
+  camStop();const v=$('#camv');
+  try{
+    cam.stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:cam.facing},width:{ideal:1920},height:{ideal:1440}}});
+    v.srcObject=cam.stream;v.classList.toggle('mirror',cam.facing==='user');await v.play().catch(()=>{});$('#camerr').hidden=true;$('#camshot').disabled=false;
+  }catch(e){
+    $('#camerr').hidden=false;$('#camshot').disabled=true;
+    $('#camerrt').textContent=/NotAllowed|Permission/i.test(e.name+e.message)?'沒有相機權限。請允許 App 使用相機，或改用手機的相機 App。':'無法開啟相機（'+(e.message||e.name)+'）。可以改用手機的相機 App。';
+  }
+}
+function camStop(){if(cam.stream){cam.stream.getTracks().forEach(t=>t.stop());cam.stream=null}const v=$('#camv');if(v)v.srcObject=null}
+function camClose(){camStop();closeSheet($('#camd'))}
+$('#camd')._onDismiss=camStop;
+$('#camx').onclick=camClose;
+$('#camflip').onclick=()=>{cam.facing=cam.facing==='environment'?'user':'environment';camStart()};
+$('#camgal').onclick=()=>{const o=cam.o;camClose();o?.onGallery()};
+$('#camsys').onclick=()=>{const o=cam.o;camClose();o?.onSystem()};
+$('#camshot').onclick=()=>{
+  const v=$('#camv'),w=v.videoWidth,h=v.videoHeight;if(!w||!h)return;
+  const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(v,0,0,w,h);
+  const o=cam.o;$('#camd').classList.add('flash');setTimeout(()=>$('#camd').classList.remove('flash'),180);
+  c.toBlob(b=>{camClose();if(b)o?.onShot(b);else toast('拍照失敗，請再試一次')},'image/jpeg',.92);
+};
+document.addEventListener('visibilitychange',()=>{if(!$('#camd').open||$('#camd')._cl)return;if(document.hidden)camStop();else camStart()});
 
 // ======================= 拍營養標示 =======================
 // 直接讀包裝上的數字（不是估算），可記錄這餐並存到食物庫
@@ -808,8 +844,8 @@ const LB_PROMPT='這是台灣食品包裝上的「營養標示」照片。請「
  +'{"readable":true,"name":"商品名稱（照片裡看不到就用 null）","serving_size":每一份量的數字,"serving_unit":"公克 或 毫升","servings":本包裝含幾份（看不到用 null）,'
  +'"per_serving":{"kcal":0,"protein_g":0,"fat_g":0,"carb_g":0,"sugar_g":0,"fiber_g":null,"sodium_mg":0},"per_100":null}'
  +'\n規則：標示上有「每100公克／毫升」欄時，per_100 填同樣格式的物件；沒有就 null。標示上沒有的項目填 null。只有 kJ 時換算成大卡（除以 4.184）。照片不是營養標示或看不清楚時 readable 為 false。';
-$('#lblf').onchange=async e=>{
-  const f=e.target.files[0];e.target.value='';if(!f)return;
+$('#lblf').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)lbFromFile(f)};
+async function lbFromFile(f){
   let img;try{img=await shrink(f,1400,.85)}catch(err){return toast(err.message)}
   lb={img,st:'load'};lbRender();openSheet($('#lbd'));
   try{
@@ -823,12 +859,12 @@ $('#lblf').onchange=async e=>{
     lb={img,st:'ok',name:o.name?String(o.name).slice(0,40):'',size,unit,servings:sv&&sv>0?sv:null,ps,qty:sv&&sv>0&&sv<=4?sv:1,lib:true,snack:false};
   }catch(err){lb={img,st:'err',msg:err.message}}
   lbRender();
-};
+}
 function lbRender(){
   const c=$('#lbc');if(!lb)return;
   if(lb.st==='load'){c.innerHTML=`<img class="lbimg" src="${lb.img}" alt="營養標示照片"><p class="mut" style="text-align:center">讀取標示中…</p>`;return}
   if(lb.st==='err'){c.innerHTML=`<img class="lbimg" src="${lb.img}" alt=""><div class="callout warn">${esc(lb.msg)}</div><div class="row"><button style="flex:1" id="lbre">重拍</button><button class="alt" id="lbno">取消</button></div>`;
-    $('#lbre').onclick=()=>{closeSheet($('#lbd'));$('#lblf').click()};$('#lbno').onclick=()=>closeSheet($('#lbd'));return}
+    $('#lbre').onclick=()=>{closeSheet($('#lbd'));openLabelCam()};$('#lbno').onclick=()=>closeSheet($('#lbd'));return}
   const P=lb.ps,q=lb.qty,r=v=>v==null?'-':Math.round(v*q*10)/10,row=(l,v,u)=>v==null?'':`<tr><td>${l}</td><td>${Math.round(v*10)/10} ${u}</td></tr>`;
   const sz=lb.size?`每份 ${lb.size} ${lb.unit}`:'每份',half=lb.servings&&lb.servings>1?lb.servings/2:null;
   c.innerHTML=`<img class="lbimg" src="${lb.img}" alt=""><label>名稱<input id="lbn" value="${esc(lb.name)}" placeholder="例如：義美小泡芙"></label>

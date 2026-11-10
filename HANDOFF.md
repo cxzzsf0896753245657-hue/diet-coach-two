@@ -25,7 +25,9 @@
 4. 下載 Artifacts 裡的 `diet-coach-apk`，安裝即可覆蓋舊版。
 
 ## 目前狀態
-版本 **2026.11.08（AI 辨識穩定性）**。
+版本 **2026.11.10（內建相機）**。
+
+2026.11.10：真機回報按「拍照」會開到前鏡頭。原因是 `<input capture="environment">` 在 Android 是呼叫系統相機 App，鏡頭方向不會傳過去，相機 App 沿用上次的鏡頭。改成 App 內建相機（`openCamera`，getUserMedia 指定 `facingMode: environment`），有快門、切換鏡頭、相簿按鈕；沒權限或不支援時可改用系統相機（原本的 file input）。「拍營養標示」也用內建相機。
 
 2026.11.08：真機回報「辨識很久、沒有結果」，推測是 Gemini 免費額度（Flash 每分鐘約 5 次、每天約 20 次）和預設的高思考程度造成。
 - `gemini-3.8-flash` 加上 `thinkingConfig.thinkingLevel: "low"`（回應較快）；若 API 不接受這個參數（400）會自動拿掉重送。
