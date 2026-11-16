@@ -64,14 +64,18 @@ var DCJobs = (function () {
         body: JSON.stringify({ systemInstruction: { parts: [{ text: st.sys }] }, contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: gc })
       }).then(function (r) {
         return r.json().catch(function () { return {} }).then(function (j) {
-          if (!r.ok || j.error) { var e = new Error(errMsg(r.status, j)); e.status = r.status; throw e }
+          if (!r.ok || j.error) { var e = new Error(errMsg(r.status, j)); e.status = r.status; e.perDay = r.status === 429 && /PerDay|per day/i.test(JSON.stringify(j)); throw e }
           var t = ((j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || []).filter(function (x) { return !x.thought }).map(function (x) { return x.text || '' }).join('');
           if (!t) throw new Error('AI 沒有回覆內容'); return t;
         });
       });
     }
     if (st.model) return gem(st.model, null);
+    // 3.8 今天的免費額度已用完（App 推過來的 st.gout，或背景自己記的 meta.gout）→ 直接用 Flash-Lite，不浪費一次請求
+    var meta = kvGet('meta', {});
+    if (Math.max(st.gout || 0, meta.gout || 0) > Date.now()) return gem('gemini-3.1-flash-lite', null);
     return gem('gemini-3.8-flash', 'low').catch(function (e) {
+      if (e.perDay) { var m = kvGet('meta', {}); m.gout = Date.now() + 6 * 3600e3; kvSet('meta', m) }
       if (e.status === 429 || e.status === 404 || e.status === 400 || e.status >= 500) return gem('gemini-3.1-flash-lite', null);
       throw e;
     });

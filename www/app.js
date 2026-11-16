@@ -21,10 +21,7 @@ let db=bootDb();
 function upgradeDb(){
   let ch=false;
   db.p??={};db.days??={};db.foods??=[];db.routines??=[];db.tags??=[];
-  if(!db.rvh){db.rvh=Object.entries(db.rv||{}).map(([kind,v])=>({kind,...v}));ch=true}
-  // 舊版另外存「各類最新一份」(rv)；現在只留完整紀錄 rvh，最新一份從 rvh 算
-  if(db.rv){for(const[kind,v]of Object.entries(db.rv))if(v&&v.date&&!db.rvh.some(r=>r.kind===kind&&r.date===v.date))db.rvh.push({kind,date:v.date,text:v.text});delete db.rv;ch=true}
-  db.rvh.forEach(r=>{if(!r.pk){r.pk=r.kind+':'+r.date;ch=true}});
+  db.rvh??=[];db.rvh.forEach(r=>{if(!r.pk){r.pk=r.kind+':'+r.date;ch=true}});
   for(const d of Object.values(db.days)){
     if(!Array.isArray(d.meals)){d.meals=[];ch=true}
     for(const m of d.meals)if(!m.id){m.id=newId('m');ch=true}   // 每筆餐點都有自己的 id，不再用陣列位置辨認
@@ -68,10 +65,7 @@ function pruneOld(){
   if(n){const ld=ks[n-1];db.rvh=db.rvh.filter(r=>String(r.date)>ld);save()}return n;
 }
 function normalizeDb(){
-  let ch=false;const have=new Set(db.rvh.filter(r=>r.kind==='day').map(r=>r.date));
-  Object.entries(db.days).forEach(([k,d])=>{if(d.review!==undefined){if(!have.has(k)){db.rvh.push({kind:'day',date:k,text:d.review,pk:'day:'+k});have.add(k)}delete d.review;ch=true}});
-  const n=pruneOld();lastPruneDay=today();if(n)toast(`已刪除 5 年前的舊資料（${n} 天）`);
-  if(ch||n){save();render()}return n;
+  const n=pruneOld();lastPruneDay=today();if(n){toast(`已刪除 5 年前的舊資料（${n} 天）`);render()}return n;
 }
 async function finishMigrate(){
   if(!needMigrate||useLS||noSave)return;needMigrate=false;
@@ -82,7 +76,6 @@ async function finishMigrate(){
     else toast('資料升級驗證失敗，已保留舊資料');
   }catch(e){toast('資料升級失敗，已保留舊資料')}
 }
-document.addEventListener('visibilitychange',()=>{if(document.hidden){flush();toastCommit()}else{if(lastPruneDay!==today())normalizeDb();applyRoutines()}});
 addEventListener('pagehide',()=>{flush()});
 const ymd=d=>new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
 const today=()=>ymd(new Date()),day=k=>db.days[k]??={meals:[]};
@@ -190,6 +183,12 @@ async function syncInner(days,quiet){
     if(!unsup.includes('sleep'))try{const g={};for(const s of await rs('sleep',3000)){const st=String(s.sleepState??'').toLowerCase();if(/awake|out/.test(st)||!s.endDate)continue;
         const k=ymd(new Date(s.endDate));g[k]=(g[k]||0)+(new Date(s.endDate)-new Date(s.startDate))/36e5}
       let n=0;for(const[k,v]of Object.entries(g))if(v>0){hh(k).sleep=+v.toFixed(1);n++}if(n)ok.push(`睡眠 ${n} 天`)}catch(e){fails.push('睡眠：'+err(e))}
+    // 身高：設定裡還沒填才自動帶入（找最近 10 年內最新的一筆）
+    if(!db.p.ht&&!unsup.includes('height'))try{
+      const L=(await H.readSamples({dataType:'height',startDate:new Date(end-3650*864e5).toISOString(),endDate:end.toISOString(),limit:1,ascending:false})).samples||[];
+      let v=L.length?num(L[0]):0;if(v>0&&v<3)v*=100;   // Health Connect 用公尺
+      if(v>=100&&v<=250){db.p.ht=Math.round(v);ok.push(`身高 ${db.p.ht} 公分（已填入設定）`)}
+    }catch(e){fails.push('身高：'+err(e))}
     // 血壓（當天最後一筆）
     if(!unsup.includes('bloodPressure'))try{let n=0;for(const s of await rs('bloodPressure',500)){const sy=s.systolic??s.value?.systolic,di=s.diastolic??s.value?.diastolic;if(sy&&di){hh(dk(s)).bp=`${Math.round(sy)}/${Math.round(di)}`;n++}}if(n)ok.push(`血壓 ${n} 筆`)}catch(e){fails.push('血壓：'+err(e))}
     // 運動紀錄
@@ -326,7 +325,6 @@ const putImg=(k,v)=>tx('readwrite',s=>s.put(v,k)),getImg=k=>tx('readonly',s=>s.g
 // 還原備份後，舊資料的照片沒有任何餐點在用了：一併刪掉，避免手機空間一直被占用
 async function dropOrphanImgs(){try{const used=new Set();Object.values(db.days).forEach(d=>(d.meals||[]).forEach(m=>{if(m.imgId)used.add(m.imgId)}));const ks=await tx('readonly',s=>s.getAllKeys());for(const k of ks)if(!used.has(k))await delImg(k)}catch(e){}}
 function loadImgs(){document.querySelectorAll('img[data-img]').forEach(async e=>{const id=e.dataset.img;if(id&&!e.getAttribute('src')){const v=await getImg(id).catch(()=>null);if(v)e.src=v;else{e.alt='照片載入失敗';e.style.visibility='visible'}}})}
-(async()=>{let ch=0;for(const d of Object.values(db.days))for(const m of d.meals)if(m.img){m.imgId=newId('i');await putImg(m.imgId,m.img);delete m.img;ch=1}if(ch){save();render()}})();
 
 // ======================= AI 總結 =======================
 function dline(k){const d=db.days[k]||{};return `${k}｜體重${d.weight??'-'}kg｜步數${d.steps??'-'}｜消耗${d.kcalOut??'-'}kcal｜攝取${kin(d)||'-'}kcal${nutDig(d)}｜${d.ex?`運動強度：${EXL[d.ex]}｜`:''}${d.tags&&d.tags.length?`標記：${d.tags.map(tagN).join('、')}｜`:''}${hxText(d)}${(d.meals||[]).map(m=>m.ai&&`${isSnack(m)?'點心:':''}${m.ai.name}`).filter(Boolean).join('、')||'無紀錄'}`}
@@ -543,9 +541,9 @@ $('#fs').onclick=()=>{
   const name=$('#fn').value.trim(),kcal=+$('#fk').value;
   if(!name||$('#fk').value===''||!(kcal>=0))return toast('請填名稱與熱量');
   const nv=id=>$('#'+id).value===''?null:+$('#'+id).value;const rec={name,unit:$('#fu').value.trim()||'1份',kcal:Math.round(kcal),protein_g:+$('#fp').value||0,carb_g:nv('fc'),fat_g:nv('ff'),fiber_g:nv('fb'),cat:fCat||guessCat(name)};
-  const ex=fe&&db.foods.find(f=>f.id===fe);
+  const ex=fe?db.foods.find(f=>f.id===fe):db.foods.find(f=>f.name===name);   // 新增同名食物：更新原本那一筆，不重複
   if(ex){if(ex.src&&['unit','kcal','protein_g','carb_g','fat_g','fiber_g'].some(k=>String(ex[k]??'')!==String(rec[k]??'')))delete ex.src;Object.assign(ex,rec)}else db.foods.push({id:newId('f'),used:0,...rec});
-  save();closeSheet($('#fdlg'));renderFoods();toast('已儲存到食物庫');
+  save();closeSheet($('#fdlg'));renderFoods();toast(ex&&!fe?`已更新食物庫裡的「${name}」`:'已儲存到食物庫');
 };
 $('#fd').onclick=()=>{
   const i=db.foods.findIndex(f=>f.id===fe);if(i<0)return;const f=db.foods[i];db.foods.splice(i,1);save();closeSheet($('#fdlg'));renderFoods();
@@ -933,9 +931,9 @@ function renderTsug(){
     h+=`<div class="mut" style="font-size:13px;margin-top:8px">${n.join('<br>')}</div>`;
   }else h=tg?'目前使用你自訂的目標。':'還缺資料：需要身高、生日（或年齡）、體重。';
   $('#tsug').innerHTML=h;
-  $('#agetxt').textContent=db.p.bd?(a?`目前 ${a} 歲，之後會自動更新`:'生日不正確'):(db.p.ag?`尚未填生日，暫時使用年齡 ${db.p.ag} 歲`:'');$('#kreset').hidden=!db.p.kadj;
+  $('#agetxt').textContent=db.p.bd?(a?`目前 ${a} 歲，之後會自動更新`:'生日不正確'):'';$('#kreset').hidden=!db.p.kadj;
 }
-function ageNow(){const p=db.p;if(p.bd){const b=new Date(p.bd+'T00:00'),n=new Date();let a=n.getFullYear()-b.getFullYear();const m=n.getMonth()-b.getMonth();if(m<0||(m===0&&n.getDate()<b.getDate()))a--;return a>0&&a<120?a:null}return p.ag||null}
+function ageNow(){const p=db.p;if(p.bd){const b=new Date(p.bd+'T00:00'),n=new Date();let a=n.getFullYear()-b.getFullYear();const m=n.getMonth()-b.getMonth();if(m<0||(m===0&&n.getDate()<b.getDate()))a--;return a>0&&a<120?a:null}return null}
 function curWeight(){
   const ws=[...Array(7)].map((_,i)=>db.days[ymd(new Date(Date.now()-i*864e5))]?.weight).filter(Boolean);
   if(ws.length)return +avg(ws).toFixed(1);
@@ -977,7 +975,7 @@ function renderAct(){
   $('#bd').innerHTML=o('','日')+Array.from({length:31},(_,i)=>o(i+1,(i+1)+' 日')).join('');
   $('#kreset').onclick=()=>{db.p.kadj=0;db.p.kadjAt='';save();render();toast('已取消微調')};
 })();
-const isSnack=m=>m.snack!==undefined?m.snack===true:(m.type==='snack'&&m.typeManual!==0);
+const isSnack=m=>m.snack===true;
 const hasSnack=d=>(d?.meals||[]).some(isSnack);
 const IC=(n,sz=22)=>{const D={spark:'<path d="M12 4l1.8 4.6L18 10l-4.2 1.4L12 16l-1.8-4.6L6 10l4.2-1.4z"/><path d="M18 16l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>',bowl:'<path d="M4 12h16a8 8 0 0 1-16 0z"/><path d="M9 8c0-1.6 1.2-1.6 1.2-3.2M14 8c0-1.6 1.2-1.6 1.2-3.2"/>',plus:'<path d="M12 5v14M5 12h14"/>',refresh:'<path d="M20 11a8 8 0 0 0-14-4L4 9"/><path d="M4 4v5h5"/><path d="M4 13a8 8 0 0 0 14 4l2-2"/><path d="M20 20v-5h-5"/>'};return`<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${D[n]||''}</svg>`};
 const EXL={rest:'休息',light:'輕度',mod:'中度',high:'高強度'},PALD={rest:1.2,light:1.375,mod:1.55,high:1.725},EXH={rest:'幾乎沒活動',light:'散步、瑜珈、伸展',mod:'慢跑、騎車、游泳',high:'重訓、長跑、球賽、HIIT'};
@@ -1339,13 +1337,13 @@ const BR_LABEL='com.dietcoach.app.background';
 function BRP(){return window.Capacitor?.Plugins?.BackgroundRunner}
 const isNative=()=>!!(window.Capacitor?.isNativePlatform?.()||window.Capacitor?.getPlatform?.()==='android');
 var bgTimer=null,bgPulling=null,bgMeta=null;
-const donePks=()=>db.rvh.map(r=>r.pk||(r.kind+':'+r.date));
+const donePks=()=>db.rvh.map(r=>r.pk);
 function bgState(){
   const rm=db.p.rm||{},p=db.p,days={},prev={};
   for(let i=0;i<100;i++){const k=addD(today(),-i),d=db.days[k];if(has(d))days[k]=dline(k)}
   ['day','week','month'].forEach(k=>{const r=latestRv(k);if(r)prev[k]=r.text});
   return{enabled:rm.aut!==false&&rm.bgr!==false,prov:p.prov||'gemini',gkey:p.gkey||'',ckey:p.key||'',model:p.gmodel||'',tz:new Date().getTimezoneOffset(),
-    rm:{rd:rm.rd,rdt:rm.rdt,rw:rm.rw,rwd:rm.rwd,rwt:rm.rwt,rm:rm.rm,rmd:rm.rmd,rmt:rm.rmt},head:summaryHead(),instr:INSTR,sys:SYS,prev,days,
+    gout:(()=>{try{return JSON.parse(localStorage.getItem('dc_gemq')||'{}')[GEMINI_DEF]||0}catch(e){return 0}})(),rm:{rd:rm.rd,rdt:rm.rdt,rw:rm.rw,rwd:rm.rwd,rwt:rm.rwt,rm:rm.rm,rmd:rm.rmd,rmt:rm.rmt},head:summaryHead(),instr:INSTR,sys:SYS,prev,days,
     done:db.rvh.filter(r=>r.date>=addD(today(),-100)).map(r=>r.pk)};
 }
 function bgPush(){const B=BRP();if(!B)return;clearTimeout(bgTimer);try{Promise.resolve(B.dispatchEvent({label:BR_LABEL,event:'sync',details:{state:bgState()}})).catch(()=>{})}catch(e){}}
@@ -1357,7 +1355,7 @@ function bgPull(){
       const r=await B.dispatchEvent({label:BR_LABEL,event:'pull',details:{}}),list=r?.pending||[],ack=[];
       list.forEach(x=>{if(!rvFind(x.kind,x.date))db.rvh.push({kind:x.kind,date:x.date,text:x.text,pk:x.pk,auto:true,bg:true});ack.push(x.pk)});
       if(list.length){save();render();toast(`背景已產生 ${list.length} 份 AI 總結`);await B.dispatchEvent({label:BR_LABEL,event:'pull',details:{ack}})}
-      bgMeta=r?.meta||{};
+      bgMeta=r?.meta||{};if(bgMeta.gout>Date.now()&&!gemOut(GEMINI_DEF))gemOutSet(GEMINI_DEF,bgMeta.gout-Date.now());   // 背景發現額度用完 → App 這邊也直接用 Flash-Lite
     }catch(e){bgMeta={err:String((e&&e.message)||e)}}
     bgStatus();
   })();return bgPulling;
@@ -1370,7 +1368,6 @@ function bgStatus(){
   row.hidden=false;const m=bgMeta||{};
   el.textContent='背景狀態：'+(m.err?`讀取失敗（${m.err}）`:m.lastRun?`系統上次叫醒 ${new Date(m.lastRun).toLocaleString()}，當次產生 ${m.lastCount||0} 份${m.lastErr?`；上次錯誤：${m.lastErr}`:''}`:'尚未執行過（App 退到背景後，要等系統叫醒，約 15 分鐘以上才會有紀錄）');
 }
-document.addEventListener('visibilitychange',()=>{if(document.hidden)bgPush();else bgPull().then(bgPush)});
 if(BRP()){setTimeout(()=>bgPull().then(bgPush),700);if(!db.bgAsked){db.bgAsked=1;try{Promise.resolve(BRP().requestPermissions({apis:['notifications']})).catch(()=>{})}catch(e){}}}
 
 // ======================= 打開 App 時補產生錯過的總結（和背景用同一份 DCJobs.planJobs） =======================
@@ -1387,7 +1384,6 @@ async function autoCheck(){
     for(const[kind,end]of jobs.slice(0,8)){if(!await review(kind,end,true)){autoFailAt=Date.now();break}}
   }finally{autoBusy=false}
 }
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)autoCheck()});
 setInterval(()=>{if(!document.hidden)autoCheck()},60000);setTimeout(autoCheck,2500);
 
 // ======================= Android 返回鍵 =======================
@@ -1438,6 +1434,14 @@ $('#obd')._onDismiss=()=>{obSave();db.obDone=1;save();render()};
 $('#obagain').onclick=openOb;
 
 // ======================= 啟動 =======================
+// App 退到背景／回到前景：全部集中在這裡，順序固定
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){flush();toastCommit();bgPush();return}
+  if(lastPruneDay!==today())normalizeDb();
+  applyRoutines();
+  bgPull().then(bgPush);   // 先開始拉背景產生的總結（bgPulling），autoCheck 會等它拉完，避免重複產生
+  autoCheck();
+});
 render();showTab('today');
 if(upgraded)save();
 normalizeDb();finishMigrate();applyRoutines();
