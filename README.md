@@ -18,9 +18,9 @@
 以下是進階手動建置方式：
 
 ## 建置步驟
-1. 安裝 Node.js 20+ 與 Android Studio。
+1. 安裝 Node.js 22+（Capacitor 8 的最低需求）與 Android Studio。
 2. `npm ci`（依 package-lock.json 安裝固定版本）
-3. `npx cap add android && npx cap sync`
+3. `npx cap add android`
 4. `bash scripts/patch-android.sh`（加權限、固定簽章、版本號、背景執行外掛設定，和雲端打包一樣）
 5. `npx cap sync android && npx cap open android`，接上手機按 Run。
 6. 手機端：Android 14+ 內建 Health Connect；較舊版本請到 Play 商店安裝。並確認你的手錶/運動 App（Fitbit、Samsung Health 等）已開啟寫入 Health Connect。

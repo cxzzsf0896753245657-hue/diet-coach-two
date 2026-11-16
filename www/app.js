@@ -263,7 +263,7 @@ async function aiRaw(content,system,max,json){
       }
     };
     let j,used;
-    if(p.gmodel){used=p.gmodel;j=await withWait(p.gmodel,null)}
+    if(p.gmodel){used=p.gmodel;try{j=await withWait(p.gmodel,null)}catch(e){aiLog(null,e.message);throw e}}
     else{
       // 先用較準的 GEMINI_DEF（思考程度設低，回應比較快）；額度用完、找不到模型、逾時或服務忙碌時改用 GEMINI_FB
       const order=gemOut(GEMINI_DEF)?[GEMINI_FB]:[GEMINI_DEF,GEMINI_FB];
@@ -323,6 +323,8 @@ async function shrink(f,max=640,qual=.6){
 const idb=new Promise((ok,no)=>{const r=indexedDB.open('dc_img',1);r.onupgradeneeded=()=>r.result.createObjectStore('i');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)});
 const tx=async(mode,fn)=>{const d=await idb;return new Promise((ok,no)=>{const q=fn(d.transaction('i',mode).objectStore('i'));q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})};
 const putImg=(k,v)=>tx('readwrite',s=>s.put(v,k)),getImg=k=>tx('readonly',s=>s.get(k)),delImg=k=>tx('readwrite',s=>s.delete(k));
+// 還原備份後，舊資料的照片沒有任何餐點在用了：一併刪掉，避免手機空間一直被占用
+async function dropOrphanImgs(){try{const used=new Set();Object.values(db.days).forEach(d=>(d.meals||[]).forEach(m=>{if(m.imgId)used.add(m.imgId)}));const ks=await tx('readonly',s=>s.getAllKeys());for(const k of ks)if(!used.has(k))await delImg(k)}catch(e){}}
 function loadImgs(){document.querySelectorAll('img[data-img]').forEach(async e=>{const id=e.dataset.img;if(id&&!e.getAttribute('src')){const v=await getImg(id).catch(()=>null);if(v)e.src=v;else{e.alt='照片載入失敗';e.style.visibility='visible'}}})}
 (async()=>{let ch=0;for(const d of Object.values(db.days))for(const m of d.meals)if(m.img){m.imgId=newId('i');await putImg(m.imgId,m.img);delete m.img;ch=1}if(ch){save();render()}})();
 
@@ -458,7 +460,7 @@ $('#bki').onchange=async e=>{
     const j=JSON.parse(await f.text());if(j.v!==1||!j.db?.days)throw Error('不是有效的備份檔');
     if(!await ask('還原備份？',`會取代目前所有資料（備份日期 ${j.at?.slice(0,10)||'不明'}）。`,'還原',true))return;
     for(const[id,v]of Object.entries(j.imgs||{}))await putImg(id,v);
-    const old=db.p;db=j.db;db.p={...(db.p||{}),key:db.p?.key||old.key,gkey:db.p?.gkey||old.gkey,rm:db.p?.rm||old.rm};upgradeDb();fullNext=true;normalizeDb();keysSave();save();render();toast('已還原');
+    const old=db.p;db=j.db;db.p={...(db.p||{}),key:db.p?.key||old.key,gkey:db.p?.gkey||old.gkey,rm:db.p?.rm||old.rm};upgradeDb();fullNext=true;normalizeDb();keysSave();save();render();toast('已還原');dropOrphanImgs();
   }catch(err){toast('還原失敗：'+err.message)}
 };
 
@@ -604,12 +606,12 @@ function renderPicker(){
 }
 $('#fpq').addEventListener('input',renderPicker);
 $('#fpc').onclick=e=>{const b=e.target.closest('[data-fpc]');if(b){fp.cat=b.dataset.fpc;renderPicker()}};
-$('#fpl').onclick=e=>{const b=e.target.closest('[data-pa]');if(!b)return;const st=fp.st,items=st.getItems(),f=db.foods.find(x=>x.id===b.dataset.pa),ex=items.find(x=>x.id===f.id);if(ex)ex.qty+=1;else items.push({...f,qty:1});st.onChange();renderPicker()};
+$('#fpl').onclick=e=>{const b=e.target.closest('[data-pa]');if(!b)return;const st=fp.st,items=st.getItems(),f=db.foods.find(x=>x.id===b.dataset.pa);if(!f)return;const ex=items.find(x=>x.id===f.id);if(ex)ex.qty+=1;else items.push({...f,qty:1});st.onChange();renderPicker()};
 const fpDone=()=>{if(fp.st){fp.st.inp.value='';libRender(fp.st)}};
 $('#fpok').onclick=$('#fpkx').onclick=()=>{closeSheet($('#fpk'));fpDone()};$('#fpk')._onDismiss=fpDone;
 
 // ======================= 新增餐點 =======================
-const mdTot=()=>md.items.reduce((a,i)=>({k:a.k+i.kcal*i.qty,p:a.p+(i.protein_g||0)*i.qty,c:a.c+(i.carb_g||0)*i.qty,f:a.f+(i.fat_g||0)*i.qty,b:a.b+(i.fiber_g||0)*i.qty}),{k:0,p:0,c:0,f:0,b:0});
+const itemsTot=L=>L.reduce((a,i)=>({k:a.k+i.kcal*i.qty,p:a.p+(i.protein_g||0)*i.qty,c:a.c+(i.carb_g||0)*i.qty,f:a.f+(i.fat_g||0)*i.qty,b:a.b+(i.fiber_g||0)*i.qty}),{k:0,p:0,c:0,f:0,b:0}),mdTot=()=>itemsTot(md.items);
 function updSum(){const t=mdTot();$('#msum').textContent=md.items.length?`食物庫已選合計：${Math.round(t.k)} kcal｜蛋白質 ${Math.round(t.p)}g`:'';
   $('#mgo').textContent=(!md.img&&!$('#mdesc').value.trim()&&md.items.length)?'直接加入':'AI 分析'}
 var mq=[];
@@ -795,8 +797,8 @@ function deleteMeal(k,id){
 var dayLock=null;
 function openAddFor(k){dayLock=k;openSheet($('#asd'))}
 $('#fab').onclick=()=>{dayLock=null;openSheet($('#asd'))};
-$('#ta-cam').onclick=()=>{closeSheet($('#asd'));if(dayLock)$('#cam').dataset.lock=dayLock;$('#cam').click()};
-$('#ta-gal').onclick=()=>{closeSheet($('#asd'));openGallery(dayLock)};
+$('#ta-cam').onclick=()=>{closeSheet($('#asd'));const c=$('#cam');if(dayLock)c.dataset.lock=dayLock;else delete c.dataset.lock;dayLock=null;c.click()};
+$('#ta-gal').onclick=()=>{closeSheet($('#asd'));openGallery(dayLock);dayLock=null};
 $('#ta-txt').onclick=()=>{closeSheet($('#asd'));openMeal(null,dayLock||undefined);dayLock=null};
 $('#ta-lbl').onclick=()=>{closeSheet($('#asd'));lbLock=dayLock;dayLock=null;$('#lblc').click()};
 $('#ta-rt').onclick=()=>{closeSheet($('#asd'));showTab('food');setFt('rt')};
@@ -808,7 +810,7 @@ const LB_PROMPT='這是台灣食品包裝上的「營養標示」照片。請「
  +'{"readable":true,"name":"商品名稱（照片裡看不到就用 null）","serving_size":每一份量的數字,"serving_unit":"公克 或 毫升","servings":本包裝含幾份（看不到用 null）,'
  +'"per_serving":{"kcal":0,"protein_g":0,"fat_g":0,"carb_g":0,"sugar_g":0,"fiber_g":null,"sodium_mg":0},"per_100":null}'
  +'\n規則：標示上有「每100公克／毫升」欄時，per_100 填同樣格式的物件；沒有就 null。標示上沒有的項目填 null。只有 kJ 時換算成大卡（除以 4.184）。照片不是營養標示或看不清楚時 readable 為 false。';
-$('#lblf').onchange=$('#lblc').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)lbFromFile(f)};
+$('#lblc').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)lbFromFile(f)};
 async function lbFromFile(f){
   let img;try{img=await shrink(f,1400,.85)}catch(err){return toast(err.message)}
   lb={img,st:'load'};lbRender();openSheet($('#lbd'));
@@ -1030,7 +1032,6 @@ function renderToday(){
   const d=day(today()),ks=Object.keys(db.days).sort(),wk=ks.filter(k=>db.days[k].weight).at(-1),lw=wk?db.days[wk].weight:db.p.w0,fk=ks.filter(k=>db.days[k].h?.fat!=null).at(-1),lf=fk?db.days[fk].h.fat:null;
   // 體重、體脂不一定每天量：顯示最近一次，不是今天量的就在下面標日期
   const ago=k=>k&&k!==today()?`<small class="mut" style="display:block;font-size:11px;font-weight:500">${+k.slice(5,7)}/${+k.slice(8)}</small>`:'';
-  $('#chips').style.gridTemplateColumns='repeat(4,1fr)';
   $('#chips').innerHTML=[['體重 kg',lw!=null?lw:'-',ago(wk)],['體脂 %',lf!=null?lf:'-',ago(fk)],['步數',d.steps!=null?d.steps.toLocaleString():'-',''],['消耗 大卡',d.kcalOut!=null?(d.kcalEst?'≈':'')+d.kcalOut.toLocaleString():'-','']].map(([a,b,c])=>`<div class="chip"><span>${a}</span><b>${b}</b>${c}</div>`).join('');
   renderQs();renderFails();
   $('#meals').innerHTML=d.meals.length?`<div class="grp">${d.meals.map(m=>mealRow(today(),m)).join('')}</div>`:`<div class="empty">${IC('bowl',34)}<b>今天還沒有紀錄</b><span class="mut">點右下角的 ＋，拍下第一餐</span></div>`;
@@ -1060,10 +1061,11 @@ function aiUi(){
   $('#aiuse').innerHTML=(u?`今天已使用 AI ${u.n} 次（${Object.entries(u.m).map(([m,n])=>`${esc(m)} ${n} 次`).join('、')}）`:'今天還沒使用 AI')+(gemOut(GEMINI_DEF)?`<br>${GEMINI_DEF} 今天的免費額度已用完，暫時改用 ${GEMINI_FB}`:'')+(e?`<br>上次錯誤（${esc(e.at)}）：${esc(e.msg)}`:'');
 }
 var keyT=null;
-function keyAuto(){clearTimeout(keyT);keyT=setTimeout(()=>{db.p.gkey=$('#gkey').value.trim();db.p.key=$('#key').value.trim();db.p.gmodel=$('#gmodel').value.trim();db.p.prov=$('#prov').value;keysSave();save();aiUi()},300)}
+function keyCommit(){clearTimeout(keyT);db.p.gkey=$('#gkey').value.trim();db.p.key=$('#key').value.trim();db.p.gmodel=$('#gmodel').value.trim();db.p.prov=$('#prov').value;keysSave();save();aiUi()}
+function keyAuto(){clearTimeout(keyT);keyT=setTimeout(keyCommit,300)}
 ['gkey','key','gmodel'].forEach(i=>$('#'+i).addEventListener('input',keyAuto));
 $('#provseg').onclick=e=>{const b=e.target.closest('button');if(!b)return;$('#prov').value=b.dataset.pv;db.p.prov=b.dataset.pv;keysSave();save();aiUi()};
-$('#aitest').onclick=async()=>{clearTimeout(keyT);db.p.gkey=$('#gkey').value.trim();db.p.key=$('#key').value.trim();db.p.gmodel=$('#gmodel').value.trim();db.p.prov=$('#prov').value;keysSave();save();aiUi();toast('測試中…');try{await ai('只回覆 OK','你是連線測試',20);toast('連線成功，金鑰有效')}catch(e){toast('連線失敗：'+e.message)}};
+$('#aitest').onclick=async()=>{keyCommit();toast('測試中…');try{await ai('只回覆 OK','你是連線測試',20);toast('連線成功，金鑰有效')}catch(e){toast('連線失敗：'+e.message)}};
 $('#aiclr').onclick=async()=>{if(!await ask('清除金鑰？','清除目前這個 AI 服務的金鑰，之後要重新貼上。','清除',true))return;if((db.p.prov||'gemini')==='gemini'){db.p.gkey='';$('#gkey').value=''}else{db.p.key='';$('#key').value=''}keysSave();save();aiUi();toast('已清除')};
 function mdHtml(t){
   const inl=x=>esc(x).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*\*/g,'');
@@ -1146,7 +1148,7 @@ function renderRt(){
 }
 function rtFill(){
   if(!rt.items.length)return;
-  const t=rt.items.reduce((a,i)=>({k:a.k+i.kcal*i.qty,p:a.p+(i.protein_g||0)*i.qty,c:a.c+(i.carb_g||0)*i.qty,f:a.f+(i.fat_g||0)*i.qty,b:a.b+(i.fiber_g||0)*i.qty}),{k:0,p:0,c:0,f:0,b:0});
+  const t=itemsTot(rt.items);
   $('#rt-k').value=Math.round(t.k);$('#rt-p').value=Math.round(t.p);$('#rt-c').value=Math.round(t.c);$('#rt-f').value=Math.round(t.f);$('#rt-b').value=Math.round(t.b*10)/10;
   if(!$('#rt-n').value.trim())$('#rt-n').value=rt.items.map(i=>i.name).join('＋').slice(0,20);
 }

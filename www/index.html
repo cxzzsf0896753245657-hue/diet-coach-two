@@ -13,7 +13,7 @@ main{max-width:560px;margin:auto;padding:6px 16px 128px}
 h1{font-size:28px;line-height:1.15;margin:0;font-weight:800;letter-spacing:-.02em}.sub{color:var(--mut);font-size:14px;margin-top:2px;min-height:1.3em}
 h2{font-size:18px;margin:0;font-weight:700}.sech{margin:24px 2px 10px;display:flex;justify-content:space-between;align-items:center}h3{font-size:15px;margin:14px 0 6px;font-weight:700}
 .card{background:var(--card);border-radius:22px;padding:16px;margin-bottom:12px;box-shadow:var(--sh)}
-.mut{color:var(--mut);font-size:13px}.row{display:flex;gap:8px;flex-wrap:wrap}.rv{white-space:pre-wrap}
+.mut{color:var(--mut);font-size:13px}.row{display:flex;gap:8px;flex-wrap:wrap}
 button,.btn{font:inherit;font-weight:600;min-height:46px;padding:0 20px;border:0;border-radius:15px;background:var(--ac);color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s,opacity .12s}
 button:active{transform:scale(.97)}button.alt{background:var(--tint);color:var(--acd)}button:disabled{opacity:.35;cursor:default}
 .sm{min-height:36px;padding:0 14px;font-size:14px;border-radius:12px}
@@ -32,7 +32,6 @@ label{display:block;font-size:14px;color:var(--mut);font-weight:500}label:has(>i
 .cal .sel{outline:2.5px solid var(--ac);outline-offset:1px}.cal button:disabled{background:transparent;opacity:.3}
 .dts{position:absolute;left:0;right:0;bottom:4px;display:flex;justify-content:center;gap:3px;pointer-events:none}.dts i{width:5px;height:5px;border-radius:50%;display:block}.dm{background:var(--ink)}.ds{background:var(--warn)}
 .dts .tgmore{font-size:9px;font-weight:700;line-height:1;color:var(--mut)}
-.pill.tagp.on{color:#fff!important}
 .li{display:grid;gap:8px;width:100%;text-align:left;background:var(--card);color:var(--ink);border-radius:16px;min-height:56px;padding:10px 14px;margin-bottom:8px;font-weight:400;font-size:14px;box-shadow:var(--sh);justify-content:stretch;align-items:center}
 svg{touch-action:manipulation}.lg{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 8px;vertical-align:middle}
 .hx{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;margin:8px 0}.hx span{color:var(--mut)}.hx b{color:var(--ink);font-weight:600}
@@ -41,7 +40,7 @@ svg{touch-action:manipulation}.lg{display:inline-block;width:10px;height:10px;bo
 .pbar{height:12px;border-radius:6px;background:var(--tint);overflow:hidden;margin:10px 0 4px}.pbar i{display:block;height:100%;background:var(--ac);border-radius:6px}.pbar.thin{height:8px;margin:5px 0 0}.pbar i.ov{background:var(--warn)}
 .nr{margin:10px 0}.nrh{display:flex;justify-content:space-between;font-size:14px}.bn{display:inline;font-size:30px;font-weight:800;line-height:1.2}.pu{white-space:nowrap}.bigrow{display:flex;justify-content:space-between;align-items:flex-end}
 .wr{display:grid;grid-template-columns:96px 1fr 48px 58px;gap:8px;align-items:center;font-size:14px;padding:8px 0;border-bottom:1px solid var(--ln)}.wb{height:8px;background:var(--tint);border-radius:4px;overflow:hidden}.wb i{display:block;height:100%;background:var(--ac);border-radius:4px}.wr .dn{color:var(--ok)}.wr .up{color:var(--warn)}.wr span:last-child{text-align:right}
-.dp{margin-top:6px}.dp .dl{font-size:16px}.tg{min-height:0;padding:2px 10px;font-size:13px;margin:0 6px 0 0;background:transparent;color:var(--mut);border:1px solid var(--ln);border-radius:999px}.tg.on{background:color-mix(in srgb,var(--warn) 22%,var(--card));color:var(--ink);border-color:var(--warn)}
+.dp{margin-top:6px}.dp .dl{font-size:16px}
 .pills.fit4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;overflow:visible}.pills.fit4 .pill{padding:6px 2px;min-width:0;font-size:13px;min-height:40px}
 .relm{padding:12px 0;border-top:1px solid var(--ln)}.relm:first-of-type{border-top:0;padding-top:0}
 .relm>label{margin-bottom:8px}.relm>.tm{margin-top:0}
@@ -70,9 +69,8 @@ svg{touch-action:manipulation}.lg{display:inline-block;width:10px;height:10px;bo
 .mb{height:6px;border-radius:3px;background:rgba(255,255,255,.2);margin-top:6px;overflow:hidden}.mb i{display:block;height:100%;background:#fff;border-radius:3px}.mb i.ov{background:#ffd666}
 .badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff}.exh .badge{background:var(--tint);color:var(--acd)}
 .hero-note{font-size:12px;opacity:.75;margin-top:12px}.hero-empty{display:grid;gap:8px;justify-items:start}.hero-empty b{font-size:20px}.hero-empty span{opacity:.8;font-size:14px}.hero-empty button{background:#fff;color:#7a3420}
-.chips{display:grid;grid-template-columns:repeat(3,1fr);background:var(--card);border-radius:20px;box-shadow:var(--sh);margin-bottom:12px;overflow:hidden}.chip{padding:12px 6px;text-align:center;border-left:1px solid var(--ln)}.chip:first-child{border-left:0}.chip span{display:block;font-size:12px;color:var(--mut)}.chip b{font-size:18px;font-weight:700}
-details.more{margin:-4px 2px 12px}details.more summary{font-size:13px;color:var(--mut);cursor:pointer;padding:4px 0}
-.exh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.exs{margin-top:10px}
+.chips{display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border-radius:20px;box-shadow:var(--sh);margin-bottom:12px;overflow:hidden}.chip{padding:12px 6px;text-align:center;border-left:1px solid var(--ln)}.chip:first-child{border-left:0}.chip span{display:block;font-size:12px;color:var(--mut)}.chip b{font-size:18px;font-weight:700}
+.exh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}.pills::-webkit-scrollbar{display:none}.pill{flex:none;min-height:40px;padding:0 16px;border-radius:999px;background:var(--tint);color:var(--ink);font-size:14px}.pill.on{background:var(--ac);color:#fff}.pills.fit{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;overflow:visible}.pills.fit .pill{padding:0;min-width:0}
 .grp{background:var(--card);border-radius:22px;box-shadow:var(--sh);overflow:hidden}
 .mrow{width:100%;text-align:left;background:transparent;color:var(--ink);min-height:78px;padding:12px 14px;border-radius:0;display:flex;gap:12px;align-items:center;justify-content:flex-start;border-bottom:1px solid var(--ln);font-weight:400}.mrow:last-child{border-bottom:0}
@@ -123,7 +121,6 @@ body.fabon #toast{bottom:calc(166px + env(safe-area-inset-bottom))}
 .tdot{width:18px;height:18px;border-radius:50%;border:2px solid var(--c);display:grid;place-items:center;flex:none;color:#fff}
 .tchip.on{background:color-mix(in srgb,var(--c) 14%,var(--card));border-color:var(--c)}.tchip.on .tdot{background:var(--c)}
 .tchip.add{border-style:dashed;color:var(--mut);padding:0 14px}
-#exd>summary .exv{margin-left:auto;font-weight:500;font-size:14px;color:var(--mut)}
 ::view-transition-old(root),::view-transition-new(root){animation:none}
 main{view-transition-name:pg}#nav{view-transition-name:nav}#fab{view-transition-name:fab}
 ::view-transition-old(pg){animation:vtout .16s ease-in both}::view-transition-new(pg){animation:vtin .24s cubic-bezier(.2,.8,.2,1) both}
@@ -131,7 +128,6 @@ main{view-transition-name:pg}#nav{view-transition-name:nav}#fab{view-transition-
 .dtrow{display:flex;gap:8px;align-items:center}.dtrow>button.alt{width:44px;padding:0;flex:none}.dlb{flex:1;min-width:0;background:var(--tint);color:var(--ink);padding:0 8px;font-size:15px;white-space:nowrap}
 .dtrow input[type=time]{width:112px;flex:none;margin:0;text-align:center}.vh{position:absolute!important;width:1px!important;height:1px!important;min-height:0!important;padding:0!important;margin:0!important;opacity:0;pointer-events:none}
 label.snkp{display:inline-flex;align-items:center;gap:6px;color:var(--ink);font-size:14px;font-weight:600;margin:0;min-height:34px;padding:0 12px;border-radius:999px;background:var(--tint);cursor:pointer}label.snkp input{width:16px;height:16px;min-height:16px;margin:0}.snkp:has(input:checked){background:color-mix(in srgb,var(--warn) 30%,var(--card))}
-#mtp .pill.on{background:var(--ac);color:#fff}
 .libq{display:flex;gap:8px;align-items:center;margin:4px 0 8px}.libq input{margin:0;flex:1;min-width:0}.libq .sm{flex:none;min-height:46px}
 .lchips{display:flex;flex-wrap:wrap;gap:6px}.lhd{font-size:12px;color:var(--mut);margin:0 2px 6px}
 .lchip{min-height:36px;padding:0 12px;border-radius:999px;background:var(--tint);color:var(--ink);font-weight:600;font-size:14px;gap:5px}.lchip small{color:var(--mut);font-weight:500;font-size:12px}
@@ -147,7 +143,6 @@ label.snkp{display:inline-flex;align-items:center;gap:6px;color:var(--ink);font-
 #msd .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}#msd .acts button{width:100%;white-space:nowrap}#msd .stk button{white-space:nowrap;padding:0 10px}
 @media(max-width:360px){#msd .stk button{font-size:14px}}
 .setrow{display:flex;align-items:center;gap:10px;margin:0 0 14px}.setrow input[type=time]{flex:1;min-width:0;margin:0}.setrow label.snkp{flex:none;min-height:46px;padding:0 16px}
-.lmore{display:block;width:100%;margin-top:8px}
 .parts .pk{width:46px;text-align:right;font-weight:700}.parts .lsr.off{opacity:.45}.parts .lsr.off .ln b{text-decoration:line-through}
 .qcard{margin-bottom:10px}.qcard p{margin:4px 0 10px}.qcard .pills{flex-wrap:wrap;overflow:visible}.qcard .pill{background:var(--card)}
 .lbimg{width:100%;max-height:180px;object-fit:contain;border-radius:14px;background:var(--tint);margin-bottom:10px}
@@ -270,7 +265,7 @@ select{-webkit-appearance:none;appearance:none;box-sizing:border-box;padding-rig
 <p class="mut" id="bkl"></p>
 <p class="mut">資料只保留最近 5 年，更早的會自動刪除。</p></details>
 <p class="mut" style="text-align:center;font-size:13px;margin-top:6px">設定改了會自動儲存</p>
-<p class="mut" style="text-align:center;font-size:12px;margin-top:4px">版本 2026.11.11（拍照改回系統相機）　<button class="alt sm" id="obagain" style="min-height:30px;font-size:12px">重看設定引導</button></p>
+<p class="mut" style="text-align:center;font-size:12px;margin-top:4px">版本 2026.11.16（全面檢查與清理）　<button class="alt sm" id="obagain" style="min-height:30px;font-size:12px">重看設定引導</button></p>
 </section>
 </main>
 <nav id="nav" aria-label="主選單"><button data-tab="today"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/></svg></span><span>今天</span></button><button data-tab="trend"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"/><path d="M8 15l3.5-4 3 3L20 7"/></svg></span><span>趨勢</span></button><button data-tab="hist"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></span><span>歷史</span></button><button data-tab="food"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16a8 8 0 0 1-16 0z"/><path d="M9 8c0-1.6 1.2-1.6 1.2-3.2M14 8c0-1.6 1.2-1.6 1.2-3.2"/></svg></span><span>食物庫</span></button><button data-tab="set"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.2" fill="var(--card)"/><circle cx="15.5" cy="12" r="2.2" fill="var(--card)"/><circle cx="8" cy="17" r="2.2" fill="var(--card)"/></svg></span><span>設定</span></button></nav>
@@ -325,7 +320,7 @@ select{-webkit-appearance:none;appearance:none;box-sizing:border-box;padding-rig
 <input id="fpq" type="search" placeholder="搜尋食物名稱" style="margin:0 0 8px" enterkeyhint="search"><div class="pills" id="fpc" style="margin-bottom:8px"></div><div id="fpl"></div>
 <div class="stk"><button id="fpok" style="width:100%">完成</button></div></dialog>
 <dialog id="lbd"><div class="sh-t"><span>營養標示</span><button class="icb" id="lbx" aria-label="關閉"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div id="lbc"></div></dialog>
-<input id="lblf" type="file" accept="image/*" hidden><input id="lblc" type="file" accept="image/*" capture="environment" hidden>
+<input id="lblc" type="file" accept="image/*" capture="environment" hidden>
 <dialog id="cfm"><div class="sh-t" id="cfmt" style="font-size:18px"></div><p id="cfmm" style="margin:0 0 16px;color:var(--mut)"></p><div class="row"><button class="alt" id="cfmn" style="flex:1">取消</button><button id="cfmy" style="flex:1">確定</button></div></dialog>
 <dialog id="obd"><div class="obdots" id="obdots"></div><div id="obc"></div><div class="row" style="margin-top:14px"><button class="alt" id="obskip" style="flex:1">略過</button><button id="obnext" style="flex:1">下一步</button></div></dialog>
 <div id="toast" role="status" aria-live="polite"><span id="toastt"></span><button id="toasta" hidden></button></div>
@@ -345,12 +340,12 @@ select{-webkit-appearance:none;appearance:none;box-sizing:border-box;padding-rig
     try{
       var d=null,imgs={};
       if(window.MAINDB){var a=await window.MAINDB.all();var mi=a.keys.indexOf('meta');if(mi>=0){d=JSON.parse(a.vals[mi]);d.days={};d.rvh=[];a.keys.forEach(function(k,i){if(k[0]==='d')Object.assign(d.days,JSON.parse(a.vals[i]));else if(k[0]==='r')d.rvh=d.rvh.concat(JSON.parse(a.vals[i]))})}}
-      if(!d){var l=localStorage.getItem('dietcoach_v1');if(l)d=JSON.parse(l)}
+      if(!d){var l=lsGet('dietcoach_v1');if(l)d=JSON.parse(l)}
       if(!d)throw new Error('找不到任何資料');
       try{var idb=await openDb('dc_img','i');var st=function(){return idb.transaction('i','readonly').objectStore('i')};var ks=await req(st().getAllKeys()),vs=await req(st().getAll());ks.forEach(function(k,i){imgs[k]=vs[i]})}catch(e){}
       var out=JSON.stringify({v:1,at:new Date().toISOString(),db:d,imgs:imgs}),name='diet-coach-rescue-'+new Date().toISOString().slice(0,10)+'.json';
       var P=window.Capacitor&&window.Capacitor.Plugins,F=P&&P.Filesystem,S=P&&P.Share;
-      if(F&&S){var o={path:name,directory:'CACHE',encoding:'utf8'},uri;for(var i=0;i<out.length;){var e=Math.min(i+2e6,out.length);if(i===0)uri=(await F.writeFile(Object.assign({},o,{data:out.slice(i,e)}))).uri;else await F.appendFile(Object.assign({},o,{data:out.slice(i,e)}));i=e}await S.share({title:name,url:uri,dialogTitle:'儲存備份檔'})}
+      if(F&&S){var o={path:name,directory:'CACHE',encoding:'utf8'},uri;for(var i=0;i<out.length;){var e=Math.min(i+2e6,out.length),c=out.charCodeAt(e-1);if(c>=0xD800&&c<=0xDBFF&&e<out.length)e--;if(i===0)uri=(await F.writeFile(Object.assign({},o,{data:out.slice(i,e)}))).uri;else await F.appendFile(Object.assign({},o,{data:out.slice(i,e)}));i=e}await S.share({title:name,url:uri,dialogTitle:'儲存備份檔'})}
       else{var x=document.createElement('a');x.href=URL.createObjectURL(new Blob([out],{type:'application/json'}));x.download=name;x.click()}
       b.textContent='已匯出，可在新版 App 的「備份與還原」匯入';
     }catch(e){b.textContent='匯出失敗：'+e.message;b.disabled=false}
