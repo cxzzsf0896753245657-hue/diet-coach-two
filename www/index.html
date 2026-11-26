@@ -103,6 +103,7 @@ dialog.drag{transition:none!important;animation:none}dialog::before{content:'';d
 .stk{position:sticky;bottom:calc(-22px - env(safe-area-inset-bottom));background:var(--card);padding:12px 0 calc(22px + env(safe-area-inset-bottom));margin-top:10px}
 .sh-t{font-size:20px;font-weight:800;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:6px}.tile{flex-direction:column;gap:6px;min-height:92px;background:var(--tint);color:var(--ink);border-radius:20px;font-size:14px}.tile svg{color:var(--ac)}
 .simg{width:100%;max-height:150px;object-fit:cover;border-radius:18px;margin-bottom:12px}.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.acts .alt{flex:1;min-width:30%}.danger{color:#c43d3d!important}
+#otabar{position:fixed;left:16px;right:16px;bottom:calc(96px + env(safe-area-inset-bottom));z-index:98;background:var(--ac);color:#fff;padding:8px 8px 8px 16px;min-height:46px;border-radius:16px;display:flex;align-items:center;gap:10px;font-size:14px;max-width:528px;margin:0 auto;box-shadow:0 6px 20px rgba(0,0,0,.2)}#otabar span{flex:1}#otabar button{background:#fff;color:var(--ac);min-height:34px;padding:0 14px;font-size:14px}#otabar .x{background:transparent;color:#fff;padding:0 8px}
 #toast{position:fixed;left:16px;right:16px;bottom:calc(96px + env(safe-area-inset-bottom));z-index:99;background:var(--ink);color:var(--bg);padding:8px 8px 8px 16px;min-height:46px;border-radius:16px;display:flex;align-items:center;gap:10px;font-size:14px;max-width:528px;margin:0 auto;opacity:0;transform:translateY(16px);pointer-events:none;transition:opacity .2s,transform .25s cubic-bezier(.2,.8,.2,1),bottom .25s}
 #toast.show{opacity:1;transform:none;pointer-events:auto}#toastt{flex:1}#toasta{min-height:34px;padding:0 14px;border-radius:11px;background:transparent;color:var(--warn);font-size:14px}
 body.fabon #toast{bottom:calc(166px + env(safe-area-inset-bottom))}
@@ -265,7 +266,8 @@ select{-webkit-appearance:none;appearance:none;box-sizing:border-box;padding-rig
 <p class="mut" id="bkl"></p>
 <p class="mut">資料只保留最近 5 年，更早的會自動刪除。</p></details>
 <p class="mut" style="text-align:center;font-size:13px;margin-top:6px">設定改了會自動儲存</p>
-<p class="mut" style="text-align:center;font-size:12px;margin-top:4px">版本 2026.11.16-b（身高自動填入、背景額度、清除舊格式）　<button class="alt sm" id="obagain" style="min-height:30px;font-size:12px">重看設定引導</button></p>
+<p class="mut" style="text-align:center;font-size:12px;margin-top:4px">版本 2026.11.26（線上更新）　<button class="alt sm" id="obagain" style="min-height:30px;font-size:12px">重看設定引導</button></p>
+<p class="mut" style="text-align:center;font-size:12px;margin:2px 0 0"><span id="otainfo"></span>　<button class="alt sm" id="otachk" style="min-height:30px;font-size:12px">檢查更新</button></p>
 </section>
 </main>
 <nav id="nav" aria-label="主選單"><button data-tab="today"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/></svg></span><span>今天</span></button><button data-tab="trend"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"/><path d="M8 15l3.5-4 3 3L20 7"/></svg></span><span>趨勢</span></button><button data-tab="hist"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></span><span>歷史</span></button><button data-tab="food"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16a8 8 0 0 1-16 0z"/><path d="M9 8c0-1.6 1.2-1.6 1.2-3.2M14 8c0-1.6 1.2-1.6 1.2-3.2"/></svg></span><span>食物庫</span></button><button data-tab="set"><span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.2" fill="var(--card)"/><circle cx="15.5" cy="12" r="2.2" fill="var(--card)"/><circle cx="8" cy="17" r="2.2" fill="var(--card)"/></svg></span><span>設定</span></button></nav>
@@ -327,14 +329,40 @@ select{-webkit-appearance:none;appearance:none;box-sizing:border-box;padding-rig
 <div id="fatal" hidden><h2 style="margin:0 0 8px">App 啟動失敗</h2><p>程式發生錯誤，畫面無法正常顯示。你的資料還在手機裡，建議先匯出備份，再把下面的錯誤訊息提供給維護的人。</p><button id="fatalbk" style="width:100%;margin:8px 0">匯出備份（含照片）</button><button class="alt" id="fatalrl" style="width:100%;margin-bottom:12px">重新載入</button><pre id="fatalmsg"></pre></div>
 <script>
 // ===== 開機程式：先讀 IndexedDB，再依序載入共用排程（runners/background.js）與主程式（app.js） =====
+// 線上更新：有下載好的新版（存在 IndexedDB dc_ota）就改跑新版的畫面與程式；這段開機程式本身只隨 APK 更新
 (function(){
+  var APK_VER="dev";   // 打包時 GitHub Actions 會改寫成這次 APK 的版本號
+  window.__apkVer=APK_VER;
   var errs=[];window.__errs=errs;
   addEventListener('error',function(e){errs.push((e.message||'錯誤')+(e.filename?'\n  at '+e.filename.split('/').pop()+':'+e.lineno+':'+e.colno:''));if(window.__appReady&&window.__onRuntimeError)window.__onRuntimeError(e.message)});
   addEventListener('unhandledrejection',function(e){var m=String((e.reason&&e.reason.message)||e.reason);errs.push('Promise：'+m);if(window.__appReady&&window.__onRuntimeError)window.__onRuntimeError(m)});
   function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
   function req(r){return new Promise(function(ok,no){r.onsuccess=function(){ok(r.result)};r.onerror=function(){no(r.error)}})}
   function openDb(name,store){return new Promise(function(ok,no){var r=indexedDB.open(name,1);r.onupgradeneeded=function(){r.result.createObjectStore(store)};r.onsuccess=function(){ok(r.result)};r.onerror=function(){no(r.error)}})}
-  function load(src){return new Promise(function(ok,no){var s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=function(){no(new Error('無法載入 '+src))};document.body.appendChild(s)})}
+  function load(src){
+    var O=window.__OTA;
+    if(O&&O.files[src]!=null){var t=document.createElement('script');t.text=O.files[src]+'\n//# sourceURL=ota/'+src;document.body.appendChild(t);return Promise.resolve()}   // 線上版：直接執行下載好的程式
+    return new Promise(function(ok,no){var s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=function(){no(new Error('無法載入 '+src))};document.body.appendChild(s)})}
+  window.__load=load;
+  function otaDrop(){try{['ota_key','ota_try','ota_apk'].forEach(function(k){localStorage.removeItem(k)})}catch(e){}
+    return openDb('dc_ota','f').then(function(o){return req(o.transaction('f','readwrite').objectStore('f').delete('pkg'))}).catch(function(){})}
+  window.__otaDrop=otaDrop;
+  async function otaApply(){
+    var C=window.Capacitor;if(!(C&&C.isNativePlatform&&C.isNativePlatform())||!lsGet('ota_key'))return;
+    // 安全機制：上次套用後沒正常開起來（ota_try 還在）、或已換裝新的 APK（ota_apk 不同）→ 丟掉線上版本，跑 APK 內建的
+    if(lsGet('ota_try')||lsGet('ota_apk')!==APK_VER){await otaDrop();return}
+    var pkg=null;try{var o=await openDb('dc_ota','f');pkg=await req(o.transaction('f','readonly').objectStore('f').get('pkg'))}catch(e){}
+    var h=pkg&&pkg.key===lsGet('ota_key')&&pkg.files&&pkg.files['index.html'];
+    if(!h||h.indexOf('</html>')<0||!pkg.files['app.js']){await otaDrop();return}
+    var N=new DOMParser().parseFromString(h,'text/html'),ns=N.querySelector('style');
+    if(!ns||!N.getElementById('fatal')){await otaDrop();return}
+    try{localStorage.setItem('ota_try','1')}catch(e){}
+    document.querySelector('style').textContent=ns.textContent;
+    [].slice.call(document.body.children).forEach(function(e){if(e.tagName!=='SCRIPT')e.remove()});
+    var first=document.body.firstChild;
+    [].slice.call(N.body.children).forEach(function(e){if(e.tagName!=='SCRIPT')document.body.insertBefore(document.importNode(e,true),first)});
+    window.__OTA=pkg;
+  }
   async function emergencyExport(){
     var b=document.getElementById('fatalbk');b.disabled=true;b.textContent='匯出中…';
     try{
@@ -354,8 +382,11 @@ select{-webkit-appearance:none;appearance:none;box-sizing:border-box;padding-rig
     var f=document.getElementById('fatal');if(!f.hidden)return;f.hidden=false;
     document.getElementById('fatalmsg').textContent=(extra?extra+'\n':'')+errs.join('\n')||'（沒有錯誤訊息）';
     document.getElementById('fatalbk').onclick=emergencyExport;document.getElementById('fatalrl').onclick=function(){location.reload()};
+    if(window.__OTA){var b=document.createElement('button');b.className='alt';b.style.cssText='width:100%;margin-bottom:12px';b.textContent='退回 App 內建版本（取消線上更新）';
+      b.onclick=function(){otaDrop().then(function(){location.reload()})};document.getElementById('fatalrl').after(b)}
   }
   async function boot(){
+    try{await otaApply()}catch(e){errs.push('線上更新：'+e.message);await otaDrop()}
     var B={meta:null,chunks:{},legacy:null};
     try{
       if(!window.indexedDB)throw new Error('no idb');

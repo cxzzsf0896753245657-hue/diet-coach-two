@@ -25,7 +25,17 @@
 4. 下載 Artifacts 裡的 `diet-coach-apk`，安裝即可覆蓋舊版。
 
 ## 目前狀態
-版本 **2026.11.16（全面檢查與清理）**。
+版本 **2026.11.26（線上更新）**。
+
+2026.11.26：線上更新（不用重裝 APK）。
+- 每次開啟 4 秒後，App 先問 GitHub API `main` 最新的 commit，再用這個 commit 的固定網址（raw.githubusercontent.com/…/<sha>/www/…）下載 `index.html`、`app.js`、`runners/background.js`、`data-tw-foods.js`。四個檔案一定來自同一版，不會被 CDN 快取弄成一半新一半舊。
+- 指紋（四個檔案內容，忽略 `APK_VER`）和正在跑的版本不同 → 整包存進 IndexedDB `dc_ota`（key `pkg`），畫面下方出現「新版已下載完成 → 立即套用」。存之前檢查 index.html 有 `</html>`、`<style>`、`#fatal`，三個 JS 用 `new Function` 確認語法完整（不執行）。
+- 套用由 index.html 最後的開機程式負責：換掉 `<style>` 和 body 裡的非 script 元素，再用下載的程式取代 `app.js`／`background.js`（`data-tw-foods.js` 用到才載入）。**開機程式本身只隨 APK 更新**，改到它時要重裝 APK。
+- 安全機制：套用前設 `ota_try=1`，新版正常開啟 4 秒後清掉，下次開啟還在就丟掉線上版。`ota_apk` 記下載時的 APK 版本號，和現在 APK 的 `APK_VER`（Actions 打包時寫入「台北日期.run_number」）不同就丟掉。線上版開不起來時，錯誤畫面多一個「退回 App 內建版本」按鈕。
+- 沒有用 Preferences／CapacitorHttp：存在 IndexedDB（和資料同一個來源），GitHub 的 raw 與 API 都允許跨網域。設定頁最下方有「檢查更新」，並顯示目前是內建版本還是線上更新。
+- 限制：Android 背景自動總結（Background Runner）用的是 APK 內建的 `runners/background.js`，線上更新不會換到它；新增手機端套件、權限、圖示、`capacitor.config.json` 或開機程式時要重裝 APK；repo 必須維持公開。
+
+2026.11.16（全面檢查與清理）：
 
 2026.11.16-b：依使用者決定的後續修改。
 - 身高：同步 Health Connect 時，設定裡身高還沒填才自動帶入最近 10 年內最新的一筆（公尺換成公分）。

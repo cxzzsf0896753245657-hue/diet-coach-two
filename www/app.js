@@ -498,7 +498,7 @@ function renderFcatf(){
 }
 $('#fcatf').onclick=e=>{const b=e.target.closest('[data-fcf]');if(!b)return;curFcat=b.dataset.fcf;renderFcatf();renderFoods()};
 // 常見食物：衛福部食藥署「食品營養成分資料庫」換算成常用份量（data-tw-foods.js，用到才載入）
-function loadTwFoods(){if(window.TW_FOODS)return Promise.resolve(window.TW_FOODS);return new Promise((ok,no)=>{const s=document.createElement('script');s.src='data-tw-foods.js';s.onload=()=>ok(window.TW_FOODS||[]);s.onerror=()=>no(Error('常見食物資料載入失敗'));document.head.appendChild(s)})}
+function loadTwFoods(){if(window.TW_FOODS)return Promise.resolve(window.TW_FOODS);if(window.__OTA?.files['data-tw-foods.js']!=null){window.__load('data-tw-foods.js');return Promise.resolve(window.TW_FOODS||[])}return new Promise((ok,no)=>{const s=document.createElement('script');s.src='data-tw-foods.js';s.onload=()=>ok(window.TW_FOODS||[]);s.onerror=()=>no(Error('常見食物資料載入失敗'));document.head.appendChild(s)})}
 async function addTwFoods(){
   try{const L=await loadTwFoods(),have=new Set(db.foods.map(f=>f.name));let n=0;
     L.forEach(f=>{if(!have.has(f.name)){db.foods.push({id:newId('f'),used:0,...f});n++}});
@@ -1432,6 +1432,54 @@ $('#obnext').onclick=()=>{obSave();if(ob<OBN-1){ob++;obRender()}else obFinish()}
 $('#obskip').onclick=()=>{obSave();if(ob>0){ob--;obRender()}else{db.obDone=1;save();closeSheet($('#obd'));render()}};
 $('#obd')._onDismiss=()=>{obSave();db.obDone=1;save();render()};
 $('#obagain').onclick=openOb;
+
+// ======================= 線上更新（不用重裝 APK） =======================
+// 每次開啟在背景比對 GitHub main 分支最新的 www；不同就整包下載存進 IndexedDB（dc_ota），提示「立即套用」。
+// 開機程式（index.html 最後那段）負責套用，以及失敗自動退回／換裝新 APK 時丟掉舊的線上版。
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const OTA_REPO='cxzzsf0896753245657-hue/diet-coach-two';
+const OTA_FILES=['index.html','app.js','runners/background.js','data-tw-foods.js'];
+function otaHash(F){let t='';for(const f of OTA_FILES)t+=f+'\n'+(F[f]||'').replace(/var APK_VER="[^"]*"/,'')+'\n';let x=5381;for(let i=0;i<t.length;i++)x=(x*33+t.charCodeAt(i))|0;return t.length+':'+(x>>>0)}
+const otaVer=h=>(/版本 ([^<（]+)/.exec(h)||[])[1]?.trim()||'';
+async function otaRunKey(){   // 目前正在跑的版本指紋
+  if(window.__OTA)return window.__OTA.key;
+  if(!otaRunKey.v){const T=await Promise.all(OTA_FILES.map(f=>fetch(f,{cache:'no-store'}).then(r=>r.text())));otaRunKey.v=otaHash(Object.fromEntries(OTA_FILES.map((f,i)=>[f,T[i]])))}
+  return otaRunKey.v;
+}
+function otaBar(ver){
+  let b=$('#otabar');if(!b){b=document.createElement('div');b.id='otabar';b.setAttribute('role','status');document.body.appendChild(b)}
+  b.innerHTML=`<span>新版${ver?'（'+esc(ver)+'）':''}已下載完成</span><button id="otago">立即套用</button><button class="x" id="otalater" aria-label="稍後">稍後</button>`;
+  $('#otago').onclick=async()=>{$('#otago').disabled=true;try{await flush(true)}catch(e){}location.reload()};
+  $('#otalater').onclick=()=>b.remove();
+}
+async function otaCheck(manual){
+  if(!isNative()){if(manual)toast('網頁版每次開啟就是最新版');return}
+  if(otaCheck.busy)return;otaCheck.busy=1;if(manual)toast('檢查更新中…');
+  try{
+    // 先問 GitHub 最新一次 commit，再用這個 commit 的固定網址抓檔案：每個檔案保證來自同一版，不會一半新一半舊
+    const sr=await fetch(`https://api.github.com/repos/${OTA_REPO}/commits/main`,{cache:'no-store',headers:{Accept:'application/vnd.github.sha'}});
+    if(!sr.ok)throw Error('GitHub '+sr.status);const sha=(await sr.text()).trim();if(!/^[0-9a-f]{40}$/.test(sha))throw Error('版本代碼不正確');
+    const T=await Promise.all(OTA_FILES.map(f=>fetch(`https://raw.githubusercontent.com/${OTA_REPO}/${sha}/www/${f}`,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error(f+' '+r.status);return r.text()})));
+    const F=Object.fromEntries(OTA_FILES.map((f,i)=>[f,T[i]]));
+    // 內容要完整才存：畫面要有結尾和必要區塊，程式要能完整解析（只檢查語法、不執行）
+    const h=F['index.html'];if(h.indexOf('</html>')<0||h.indexOf('id="fatal"')<0||h.indexOf('<style>')<0)throw Error('下載的畫面不完整');
+    for(const f of OTA_FILES.slice(1))try{new Function(F[f])}catch(e){throw Error(f+' 不完整')}
+    const key=otaHash(F),ver=otaVer(h);
+    if(key===await otaRunKey()){if(manual)toast('已經是最新版');return}
+    if(key!==lsGet('ota_key')){
+      const o=await new Promise((ok,no)=>{const q=indexedDB.open('dc_ota',1);q.onupgradeneeded=()=>q.result.createObjectStore('f');q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)});
+      await new Promise((ok,no)=>{const t=o.transaction('f','readwrite');t.objectStore('f').put({key,sha,ver,at:new Date().toISOString(),files:F},'pkg');t.oncomplete=ok;t.onerror=()=>no(t.error)});
+      localStorage.setItem('ota_key',key);localStorage.setItem('ota_apk',window.__apkVer||'dev');localStorage.removeItem('ota_try');
+    }
+    otaBar(ver);
+  }catch(e){if(manual)toast('檢查更新失敗，請確認網路（'+e.message+'）')}
+  finally{otaCheck.busy=0}
+}
+function otaInfo(){const O=window.__OTA;$('#otainfo').textContent=O?`線上更新（${O.at.slice(0,10)} 下載，${O.sha.slice(0,7)}）`:`App 內建版本（${window.__apkVer||'dev'}）`}
+$('#otachk').onclick=()=>otaCheck(true);
+otaInfo();
+// 新版正常開啟 4 秒後，才算套用成功（清掉 ota_try）；同時在背景檢查更新
+setTimeout(()=>{try{localStorage.removeItem('ota_try')}catch(e){}otaCheck()},4000);
 
 // ======================= 啟動 =======================
 // App 退到背景／回到前景：全部集中在這裡，順序固定

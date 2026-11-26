@@ -16,6 +16,13 @@ jobs:
       - run: npm ci
       - run: npx cap add android
       - run: bash scripts/patch-android.sh
+      # 線上更新用：把這次 APK 的版本號寫進 index.html 開機程式。換裝新 APK 時，App 會丟掉舊的線上版本
+      - name: 寫入 APK 版本號
+        run: |
+          V="$(TZ=Asia/Taipei date +%Y.%m.%d).${{ github.run_number }}"
+          sed -i "s/var APK_VER=\"[^\"]*\"/var APK_VER=\"$V\"/" www/index.html
+          grep -q "var APK_VER=\"$V\"" www/index.html
+          echo "APK 版本號：$V" >> "$GITHUB_STEP_SUMMARY"
       - run: npx cap sync android
       - name: Build APK (with background runner)
         id: full
